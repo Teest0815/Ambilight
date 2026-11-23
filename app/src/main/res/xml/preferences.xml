@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="WLED-Verbindung">
+        <EditTextPreference
+            android:defaultValue=""
+            android:dialogTitle="IP-Adresse oder Hostname von WLED"
+            android:key="host"
+            android:title="WLED-Adresse"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:defaultValue="ddp"
+            android:entries="@array/protocol_entries"
+            android:entryValues="@array/protocol_values"
+            android:key="protocol"
+            android:title="Protokoll"
+            app:useSimpleSummaryProvider="true" />
+        <Preference
+            android:key="read_led_count"
+            android:summary="Verbindung testen und die LED-Anzahl aus WLED als Gesamtzahl übernehmen"
+            android:title="WLED abfragen" />
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="wled_on_start"
+            android:summary="Sendet beim Start „An“ an WLED"
+            android:title="WLED beim Start einschalten" />
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="wled_off_stop"
+            android:summary="Sonst kehrt WLED nach dem Stopp zu seinem normalen Zustand zurück"
+            android:title="WLED beim Beenden ausschalten" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="LED-Layout">
+        <EditTextPreference
+            android:defaultValue="30"
+            android:dialogTitle="Anzahl LEDs oben"
+            android:key="leds_top"
+            android:title="LEDs oben"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="17"
+            android:dialogTitle="Anzahl LEDs rechts"
+            android:key="leds_right"
+            android:title="LEDs rechts"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="30"
+            android:dialogTitle="Anzahl LEDs unten"
+            android:key="leds_bottom"
+            android:title="LEDs unten"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="17"
+            android:dialogTitle="Anzahl LEDs links"
+            android:key="leds_left"
+            android:title="LEDs links"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:defaultValue="bottom_left"
+            android:entries="@array/corner_entries"
+            android:entryValues="@array/corner_values"
+            android:key="start_corner"
+            android:title="Start des Streifens (erste LED)"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:defaultValue="clockwise"
+            android:entries="@array/direction_entries"
+            android:entryValues="@array/direction_values"
+            android:key="direction"
+            android:title="Laufrichtung"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="0"
+            android:dialogMessage="Verschiebt das Layout um diese Anzahl LEDs (auch negativ), z. B. wenn der Streifen in der Mitte einer Seite beginnt."
+            android:dialogTitle="LED-Versatz"
+            android:key="led_offset"
+            android:title="LED-Versatz"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="0"
+            android:dialogMessage="LEDs am Anfang des Streifens, die nicht hinter dem Fernseher liegen (z. B. Kabelweg). Sie bleiben dunkel."
+            android:dialogTitle="LEDs am Anfang überspringen"
+            android:key="skip_leading"
+            android:title="LEDs am Anfang überspringen"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="0"
+            android:dialogMessage="0 = automatisch (Summe aller Seiten plus übersprungene LEDs)."
+            android:dialogTitle="Gesamtzahl LEDs im Streifen"
+            android:key="total_leds"
+            android:title="Gesamtzahl LEDs im Streifen"
+            app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            android:defaultValue="12"
+            android:key="depth"
+            android:max="40"
+            android:title="Messtiefe am Bildrand (%)"
+            app:min="3"
+            app:showSeekBarValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Aufnahme">
+        <SeekBarPreference
+            android:defaultValue="30"
+            android:key="fps"
+            android:max="60"
+            android:title="Aufnahmefrequenz (Bilder pro Sekunde)"
+            app:min="5"
+            app:showSeekBarValue="true" />
+        <ListPreference
+            android:defaultValue="160"
+            android:entries="@array/capture_width_entries"
+            android:entryValues="@array/capture_width_values"
+            android:key="capture_width"
+            android:title="Aufnahmeauflösung"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            android:defaultValue="average"
+            android:entries="@array/color_mode_entries"
+            android:entryValues="@array/color_mode_values"
+            android:key="color_mode"
+            android:title="Farbberechnung"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Farbe und Glättung">
+        <SeekBarPreference
+            android:defaultValue="150"
+            android:key="smoothing"
+            android:max="1000"
+            android:title="Glättung (ms)"
+            app:seekBarIncrement="10"
+            app:showSeekBarValue="true" />
+        <SeekBarPreference
+            android:defaultValue="100"
+            android:key="brightness"
+            android:max="100"
+            android:title="Helligkeit (%)"
+            app:showSeekBarValue="true" />
+        <SeekBarPreference
+            android:defaultValue="100"
+            android:key="saturation"
+            android:max="300"
+            android:title="Sättigung (%)"
+            app:seekBarIncrement="5"
+            app:showSeekBarValue="true" />
+        <ListPreference
+            android:defaultValue="1.0"
+            android:entries="@array/gamma_entries"
+            android:entryValues="@array/gamma_values"
+            android:key="gamma"
+            android:title="Gamma"
+            app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            android:defaultValue="100"
+            android:key="gain_r"
+            android:max="100"
+            android:title="Weißabgleich Rot (%)"
+            app:min="20"
+            app:showSeekBarValue="true" />
+        <SeekBarPreference
+            android:defaultValue="100"
+            android:key="gain_g"
+            android:max="100"
+            android:title="Weißabgleich Grün (%)"
+            app:min="20"
+            app:showSeekBarValue="true" />
+        <SeekBarPreference
+            android:defaultValue="100"
+            android:key="gain_b"
+            android:max="100"
+            android:title="Weißabgleich Blau (%)"
+            app:min="20"
+            app:showSeekBarValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Schwarze Balken (Filme)">
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="bar_detect"
+            android:summary="Schwarze Ränder oben/unten und links/rechts werden ignoriert"
+            android:title="Balken automatisch erkennen" />
+        <SeekBarPreference
+            android:defaultValue="20"
+            android:key="bar_threshold"
+            android:max="60"
+            android:title="Schwarzschwelle (Helligkeit 0–255)"
+            app:min="1"
+            app:showSeekBarValue="true" />
+        <SeekBarPreference
+            android:defaultValue="1000"
+            android:key="bar_delay"
+            android:max="5000"
+            android:title="Verzögerung bis zur Übernahme (ms)"
+            app:min="200"
+            app:seekBarIncrement="100"
+            app:showSeekBarValue="true" />
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="bar_symmetric"
+            android:summary="Balken müssen auf beiden Seiten gleich breit sein. Das verhindert Fehlerkennung in dunklen Szenen."
+            android:title="Symmetrische Balken" />
+        <SeekBarPreference
+            android:defaultValue="35"
+            android:key="bar_max"
+            android:max="45"
+            android:title="Maximale Balkenbreite pro Seite (%)"
+            app:min="10"
+            app:showSeekBarValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Schwarzes Bild (z. B. Netflix)">
+        <ListPreference
+            android:defaultValue="off"
+            android:entries="@array/black_action_entries"
+            android:entryValues="@array/black_action_values"
+            android:key="black_action"
+            android:title="Was passiert bei schwarzem Bild?"
+            app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            android:defaultValue="1500"
+            android:key="black_delay"
+            android:max="10000"
+            android:title="Verzögerung bis zur Umschaltung (ms)"
+            app:min="250"
+            app:seekBarIncrement="250"
+            app:showSeekBarValue="true" />
+        <SeekBarPreference
+            android:defaultValue="4"
+            android:key="black_threshold"
+            android:max="30"
+            android:title="Schwelle für „schwarz“ (mittlere Helligkeit)"
+            app:min="1"
+            app:showSeekBarValue="true" />
+        <EditTextPreference
+            android:defaultValue="#FF6A00"
+            android:dialogMessage="Farbe als Hexwert, z. B. #FF6A00. Gilt für „Feste Farbe“, Atmen, Komet und Funkeln."
+            android:dialogTitle="Farbe"
+            android:key="black_color"
+            android:title="Farbe"
+            app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            android:defaultValue="50"
+            android:key="black_brightness"
+            android:max="100"
+            android:title="Helligkeit bei schwarzem Bild (%)"
+            app:min="1"
+            app:showSeekBarValue="true" />
+        <ListPreference
+            android:defaultValue="breathing"
+            android:entries="@array/effect_entries"
+            android:entryValues="@array/effect_values"
+            android:key="black_effect"
+            android:title="Effekt der App"
+            app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            android:defaultValue="40"
+            android:key="effect_speed"
+            android:max="100"
+            android:title="Effektgeschwindigkeit"
+            app:min="1"
+            app:showSeekBarValue="true" />
+        <EditTextPreference
+            android:defaultValue="0"
+            android:dialogMessage="Nummer des WLED-Presets. 0 = kein Preset, dann wird der Effekt unten verwendet."
+            android:dialogTitle="WLED-Preset"
+            android:key="wled_preset"
+            android:title="WLED: Preset-Nummer"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="0"
+            android:dialogMessage="Effekt-ID wie in WLED (0 = Solid, 2 = Breathe, 9 = Rainbow …). Wird nur ohne Preset genutzt."
+            android:dialogTitle="WLED-Effekt"
+            android:key="wled_fx"
+            android:title="WLED: Effekt-ID"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="128"
+            android:dialogTitle="Effektgeschwindigkeit in WLED (0–255)"
+            android:key="wled_sx"
+            android:title="WLED: Geschwindigkeit"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="128"
+            android:dialogTitle="Effektintensität in WLED (0–255)"
+            android:key="wled_ix"
+            android:title="WLED: Intensität"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="0"
+            android:dialogTitle="Palette in WLED (ID)"
+            android:key="wled_pal"
+            android:title="WLED: Palette"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="System">
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="auto_start"
+            android:summary="Öffnet die App nach dem Einschalten des Fernsehers und fragt die Aufnahme-Berechtigung ab. Funktioniert nicht auf jedem Gerät."
+            android:title="Beim Start des Fernsehers starten" />
+    </PreferenceCategory>
+</PreferenceScreen>

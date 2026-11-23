@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Ambilight" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">#FF8A00</item>
+        <item name="colorPrimaryDark">#121212</item>
+        <item name="colorAccent">#FF8A00</item>
+        <item name="android:windowBackground">#121212</item>
+        <item name="android:textColorPrimary">#F2F2F2</item>
+        <item name="android:textColorSecondary">#B5B5B5</item>
+    </style>
+</resources>

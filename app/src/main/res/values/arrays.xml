@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="protocol_entries">
+        <item>DDP (empfohlen, Port 4048)</item>
+        <item>UDP Realtime DNRGB (Port 21324)</item>
+    </string-array>
+    <string-array name="protocol_values">
+        <item>ddp</item>
+        <item>udp</item>
+    </string-array>
+
+    <string-array name="corner_entries">
+        <item>Unten links</item>
+        <item>Oben links</item>
+        <item>Oben rechts</item>
+        <item>Unten rechts</item>
+    </string-array>
+    <string-array name="corner_values">
+        <item>bottom_left</item>
+        <item>top_left</item>
+        <item>top_right</item>
+        <item>bottom_right</item>
+    </string-array>
+
+    <string-array name="direction_entries">
+        <item>Im Uhrzeigersinn</item>
+        <item>Gegen den Uhrzeigersinn</item>
+    </string-array>
+    <string-array name="direction_values">
+        <item>clockwise</item>
+        <item>counter</item>
+    </string-array>
+
+    <string-array name="capture_width_entries">
+        <item>80 px (sehr schnell)</item>
+        <item>120 px</item>
+        <item>160 px (Standard)</item>
+        <item>240 px</item>
+        <item>320 px (genau, langsamer)</item>
+    </string-array>
+    <string-array name="capture_width_values">
+        <item>80</item>
+        <item>120</item>
+        <item>160</item>
+        <item>240</item>
+        <item>320</item>
+    </string-array>
+
+    <string-array name="color_mode_entries">
+        <item>Durchschnitt</item>
+        <item>Kräftige Farben bevorzugen</item>
+    </string-array>
+    <string-array name="color_mode_values">
+        <item>average</item>
+        <item>vibrant</item>
+    </string-array>
+
+    <string-array name="gamma_entries">
+        <item>1,0 (aus)</item>
+        <item>1,5</item>
+        <item>1,8</item>
+        <item>2,2</item>
+        <item>2,6</item>
+    </string-array>
+    <string-array name="gamma_values">
+        <item>1.0</item>
+        <item>1.5</item>
+        <item>1.8</item>
+        <item>2.2</item>
+        <item>2.6</item>
+    </string-array>
+
+    <string-array name="black_action_entries">
+        <item>LEDs ausschalten</item>
+        <item>Letzte Farben halten</item>
+        <item>Feste Farbe</item>
+        <item>Effekt der App</item>
+        <item>WLED übernimmt (Preset / Effekt)</item>
+    </string-array>
+    <string-array name="black_action_values">
+        <item>off</item>
+        <item>hold</item>
+        <item>static</item>
+        <item>effect</item>
+        <item>wled</item>
+    </string-array>
+
+    <string-array name="effect_entries">
+        <item>Atmen</item>
+        <item>Regenbogen</item>
+        <item>Farbwechsel</item>
+        <item>Komet</item>
+        <item>Funkeln</item>
+    </string-array>
+    <string-array name="effect_values">
+        <item>breathing</item>
+        <item>rainbow</item>
+        <item>color_cycle</item>
+        <item>comet</item>
+        <item>sparkle</item>
+    </string-array>
+</resources>
