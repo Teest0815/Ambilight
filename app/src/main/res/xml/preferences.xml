@@ -268,7 +268,7 @@
             android:defaultValue="40"
             android:key="effect_speed"
             android:max="100"
-            android:title="Effektgeschwindigkeit"
+            android:title="Effektgeschwindigkeit (App-Effekte)"
             app:min="1"
             app:showSeekBarValue="true" />
         <EditTextPreference
@@ -305,17 +305,75 @@
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="System">
-        <SwitchPreferenceCompat
-            android:defaultValue="true"
-            android:key="wled_off_standby"
-            android:summary="Im Standby werden die LEDs ausgeschaltet, beim Aufwachen wieder eingeschaltet"
-            android:title="WLED im Standby ausschalten" />
+    <PreferenceCategory android:title="Standby (Bildschirm aus)">
+        <ListPreference
+            android:defaultValue="off"
+            android:entries="@array/standby_action_entries"
+            android:entryValues="@array/standby_action_values"
+            android:key="standby_action"
+            android:title="Was passiert im Standby?"
+            app:useSimpleSummaryProvider="true" />
         <SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="pause_on_dream"
             android:summary="Das Ambilight pausiert auch, wenn der Bildschirmschoner läuft"
-            android:title="Bei Bildschirmschoner pausieren" />
+            android:title="Auch bei Bildschirmschoner" />
+        <EditTextPreference
+            android:defaultValue="#FF6A00"
+            android:dialogMessage="Farbe als Hexwert, z. B. #FF6A00. Gilt für „Feste Farbe“ und App-Effekte außer Regenbogen und Farbwechsel."
+            android:dialogTitle="Farbe im Standby"
+            android:key="standby_color"
+            android:title="Standby: Farbe"
+            app:useSimpleSummaryProvider="true" />
+        <SeekBarPreference
+            android:defaultValue="30"
+            android:key="standby_brightness"
+            android:max="100"
+            android:title="Standby: Helligkeit (%)"
+            app:min="1"
+            app:showSeekBarValue="true" />
+        <ListPreference
+            android:defaultValue="breathing"
+            android:entries="@array/effect_entries"
+            android:entryValues="@array/effect_values"
+            android:key="standby_effect"
+            android:title="Standby: Effekt der App"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="0"
+            android:dialogMessage="Nummer des WLED-Presets. 0 = kein Preset, dann wird die Effekt-ID unten verwendet."
+            android:dialogTitle="WLED-Preset im Standby"
+            android:key="standby_wled_preset"
+            android:title="Standby: WLED-Preset"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="0"
+            android:dialogMessage="Effekt-ID wie in WLED (0 = Solid, 2 = Breathe, 9 = Rainbow …). Wird nur ohne Preset genutzt."
+            android:dialogTitle="WLED-Effekt im Standby"
+            android:key="standby_wled_fx"
+            android:title="Standby: WLED-Effekt-ID"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="128"
+            android:dialogTitle="Effektgeschwindigkeit in WLED (0–255)"
+            android:key="standby_wled_sx"
+            android:title="Standby: WLED-Geschwindigkeit"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="128"
+            android:dialogTitle="Effektintensität in WLED (0–255)"
+            android:key="standby_wled_ix"
+            android:title="Standby: WLED-Intensität"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="0"
+            android:dialogTitle="Palette in WLED (ID)"
+            android:key="standby_wled_pal"
+            android:title="Standby: WLED-Palette"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="System">
         <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="auto_start"

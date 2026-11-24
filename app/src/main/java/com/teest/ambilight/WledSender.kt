@@ -174,10 +174,14 @@ class WledSender {
 
         /** Hands the strip over to WLED's own preset or effect while the screen is black. */
         fun handoverJson(cfg: Config): String =
-            if (cfg.wledPreset > 0) {
-                """{"on":true,"lor":1,"ps":${cfg.wledPreset}}"""
+            handoverJson(cfg.wledPreset, cfg.wledFx, cfg.wledSx, cfg.wledIx, cfg.wledPal)
+
+        /** Preset > 0 selects a WLED preset, otherwise effect fx with speed, intensity and palette. */
+        fun handoverJson(preset: Int, fx: Int, sx: Int, ix: Int, pal: Int): String =
+            if (preset > 0) {
+                """{"on":true,"lor":1,"ps":$preset}"""
             } else {
-                """{"on":true,"lor":1,"seg":[{"id":0,"fx":${cfg.wledFx},"sx":${cfg.wledSx},"ix":${cfg.wledIx},"pal":${cfg.wledPal}}]}"""
+                """{"on":true,"lor":1,"seg":[{"id":0,"fx":$fx,"sx":$sx,"ix":$ix,"pal":$pal}]}"""
             }
     }
 }

@@ -279,25 +279,89 @@ class CaptureService : Service() {
                 val dt = (loopStart - last).coerceIn(1L, 250L).toFloat()
                 last = loopStart
 
-                // ---- standby: stop sending, switch WLED off, wait ----
+                if (cfg.layout != layout.spec) {
+                    layout = LedLayout(cfg.layout)
+                    processor = ColorProcessor(layout.count)
+                    target = FloatArray(layout.count * 3)
+                    lastGood = FloatArray(layout.count * 3)
+                    out = ByteArray(layout.totalLeds * 3)
+                    bars.reset()
+                    snapNext = true
+                }
+
+                // ---- standby: no capture, the chosen standby behaviour runs instead ----
                 if (paused) {
                     if (!wasPaused) {
                         wasPaused = true
-                        java.util.Arrays.fill(out, 0.toByte())
-                        repeat(2) { sender.send(cfg, out) }
-                        if (cfg.standbyWledOff) {
-                            val host = cfg.host
-                            thread { WledSender.postState(host, WledSender.onJson(false)) }
+                        val host = cfg.host
+                        when (cfg.standbyAction) {
+                            StandbyAction.OFF -> {
+                                java.util.Arrays.fill(out, 0.toByte())
+                                repeat(2) { sender.send(cfg, out) }
+                                thread { WledSender.postState(host, WledSender.onJson(false)) }
+                            }
+                            StandbyAction.WLED -> {
+                                // WLED shows its own preset/effect as soon as our data stops.
+                                val json = WledSender.handoverJson(
+                                    cfg.standbyPreset, cfg.standbyFx, cfg.standbySx, cfg.standbyIx, cfg.standbyPal,
+                                )
+                                thread { WledSender.postState(host, json) }
+                            }
+                            StandbyAction.STATIC, StandbyAction.EFFECT -> {
+                                snapNext = true
+                                thread { WledSender.postState(host, WledSender.onJson(true)) }
+                            }
                         }
                         AmbilightState.colors.value = null
-                        AmbilightState.status.value = "Pausiert (Standby)"
+                        AmbilightState.status.value = "Pausiert (Standby): " + when (cfg.standbyAction) {
+                            StandbyAction.OFF -> "WLED aus"
+                            StandbyAction.WLED -> "WLED-Effekt"
+                            StandbyAction.STATIC -> "feste Farbe"
+                            StandbyAction.EFFECT -> "App-Effekt"
+                        }
                     }
                     try {
                         reader?.acquireLatestImage()?.close() // do not keep stale frames
                     } catch (e: Exception) {
                         // ignore
                     }
-                    delay(400)
+                    when (cfg.standbyAction) {
+                        StandbyAction.STATIC -> {
+                            val f = cfg.standbyBrightness / 100f
+                            val r = (Color.red(cfg.standbyColor) * f + 0.5f).toInt().toByte()
+                            val g = (Color.green(cfg.standbyColor) * f + 0.5f).toInt().toByte()
+                            val bl = (Color.blue(cfg.standbyColor) * f + 0.5f).toInt().toByte()
+                            java.util.Arrays.fill(out, 0.toByte())
+                            for (k in 0 until layout.count) {
+                                val d = (cfg.layout.skipLeading + k) * 3
+                                if (d + 2 >= out.size) break
+                                out[d] = r
+                                out[d + 1] = g
+                                out[d + 2] = bl
+                            }
+                            sender.send(cfg, out) // repeated, so WLED stays in live mode
+                            delay(400)
+                        }
+                        StandbyAction.EFFECT -> {
+                            engine.render(
+                                cfg.standbyEffect,
+                                loopStart - startTime,
+                                dt,
+                                layout.count,
+                                cfg.standbyColor,
+                                cfg.effectSpeed,
+                                cfg.standbyBrightness / 100f,
+                                target,
+                            )
+                            processor.process(target, cfg, dt, min(cfg.smoothingMs, 120).toFloat(), snapNext)
+                            snapNext = false
+                            java.util.Arrays.fill(out, 0.toByte())
+                            processor.writeTo(out, cfg.layout.skipLeading)
+                            sender.send(cfg, out)
+                            delay(maxOf(1L, 33L - (SystemClock.elapsedRealtime() - loopStart)))
+                        }
+                        else -> delay(400)
+                    }
                     continue
                 }
                 if (wasPaused) {
@@ -310,21 +374,11 @@ class CaptureService : Service() {
                     snapNext = true
                     bars.reset()
                     last = loopStart
-                    if (cfg.standbyWledOff || cfg.wledOnStart) {
+                    if (cfg.standbyAction == StandbyAction.OFF || cfg.standbyAction == StandbyAction.WLED || cfg.wledOnStart) {
                         val host = cfg.host
                         thread { WledSender.postState(host, WledSender.onJson(true)) }
                     }
                     AmbilightState.status.value = "Warte auf Bild …"
-                }
-
-                if (cfg.layout != layout.spec) {
-                    layout = LedLayout(cfg.layout)
-                    processor = ColorProcessor(layout.count)
-                    target = FloatArray(layout.count * 3)
-                    lastGood = FloatArray(layout.count * 3)
-                    out = ByteArray(layout.totalLeds * 3)
-                    bars.reset()
-                    snapNext = true
                 }
 
                 // ---- adaptive performance: user settings are the upper limit ----

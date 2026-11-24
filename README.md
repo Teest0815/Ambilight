@@ -12,7 +12,7 @@ Android-TV-App, die den Bildschirm aufnimmt und daraus ein Ambilight für einen 
 - **Verhalten bei schwarzem Bild** (z. B. Netflix mit Kopierschutz): LEDs aus, letzte Farben halten, feste Farbe, Effekt der App (Atmen, Regenbogen, Farbwechsel, Komet, Funkeln) oder WLED übernimmt mit eigenem Preset bzw. Effekt (inkl. Geschwindigkeit, Intensität, Palette)
 - **Farbanpassung**: Durchschnitt oder kräftige Farben bevorzugen, Glättung, Helligkeit, Sättigung, Gamma, Weißabgleich (R/G/B)
 - **WLED automatisch finden** (mDNS und Netzwerk-Scan), Adresse und LED-Anzahl werden übernommen
-- **Standby**: Bei Bildschirm aus (und optional beim Bildschirmschoner) pausiert das Ambilight, WLED wird ausgeschaltet und beim Aufwachen wieder eingeschaltet
+- **Standby** (Bildschirm aus, optional auch Bildschirmschoner): Das Ambilight pausiert, und du wählst, was dann passiert: WLED aus, WLED übernimmt mit eigenem Preset oder Effekt (inkl. Geschwindigkeit, Intensität, Palette), feste Farbe oder ein App-Effekt. Beim Aufwachen geht es automatisch weiter.
 - **Automatische Leistungsanpassung**: Bildrate und Auflösung werden gesenkt, wenn das Gerät nicht mitkommt (die eigenen Einstellungen sind die Obergrenze)
 - WLED beim Start ein- und beim Beenden ausschalten, LED-Anzahl direkt aus WLED lesen, nach einem WLED-Neustart wird es wieder eingeschaltet
 - Optional Start nach dem Einschalten des Fernsehers
@@ -34,5 +34,6 @@ Die APK wird immer mit demselben Schlüssel (`app/ambilight-release.jks`) signie
 
 - Inhalte mit Kopierschutz (Netflix, Disney+, Prime Video …) liefern der App ein schwarzes Bild. Genau dafür gibt es die Einstellungen unter „Schwarzes Bild“.
 - Nur was auf dem Fernseher selbst läuft, wird aufgenommen. HDMI-Eingänge sind für Apps nicht zugänglich.
+- Im Standby läuft „WLED übernimmt“ am zuverlässigsten, weil WLED den Effekt selbst abspielt. Feste Farbe und App-Effekt brauchen, dass die App im Standby weiterläuft, was nicht jeder Fernseher erlaubt.
 - Die Berechtigung zur Bildschirmaufnahme muss nach jedem Start bestätigt werden. „Beim Start des Fernsehers starten“ öffnet nur die App und zeigt diese Abfrage, manche Geräte blockieren das.
 - Der Code ist bisher nicht auf einem echten Fernseher getestet.

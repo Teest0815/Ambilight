@@ -6,6 +6,7 @@ import android.graphics.Color
 enum class Protocol { DDP, UDP }
 enum class StartCorner { TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT }
 enum class BlackAction { OFF, HOLD, STATIC, EFFECT, WLED }
+enum class StandbyAction { OFF, WLED, STATIC, EFFECT }
 
 /** Everything that decides where LEDs sit on the screen edge. Data class so it can be compared cheaply. */
 data class LayoutSpec(
@@ -56,7 +57,15 @@ data class Config(
     val wledPal: Int,
     val autoStart: Boolean,
     val adaptive: Boolean,
-    val standbyWledOff: Boolean,
+    val standbyAction: StandbyAction,
+    val standbyColor: Int,
+    val standbyBrightness: Int,
+    val standbyEffect: String,
+    val standbyPreset: Int,
+    val standbyFx: Int,
+    val standbySx: Int,
+    val standbyIx: Int,
+    val standbyPal: Int,
     val pauseOnDream: Boolean,
 ) {
     companion object {
@@ -122,7 +131,20 @@ data class Config(
                 wledPal = p.num("wled_pal", 0).coerceIn(0, 255),
                 autoStart = p.bool("auto_start", false),
                 adaptive = p.bool("adaptive", true),
-                standbyWledOff = p.bool("wled_off_standby", true),
+                standbyAction = when (p.str("standby_action", "off")) {
+                    "wled" -> StandbyAction.WLED
+                    "static" -> StandbyAction.STATIC
+                    "effect" -> StandbyAction.EFFECT
+                    else -> StandbyAction.OFF
+                },
+                standbyColor = parseColor(p.str("standby_color", DEFAULT_BLACK_COLOR)),
+                standbyBrightness = p.num("standby_brightness", 30).coerceIn(1, 100),
+                standbyEffect = p.str("standby_effect", "breathing"),
+                standbyPreset = p.num("standby_wled_preset", 0).coerceIn(0, 250),
+                standbyFx = p.num("standby_wled_fx", 0).coerceIn(0, 255),
+                standbySx = p.num("standby_wled_sx", 128).coerceIn(0, 255),
+                standbyIx = p.num("standby_wled_ix", 128).coerceIn(0, 255),
+                standbyPal = p.num("standby_wled_pal", 0).coerceIn(0, 255),
                 pauseOnDream = p.bool("pause_on_dream", true),
             )
         }

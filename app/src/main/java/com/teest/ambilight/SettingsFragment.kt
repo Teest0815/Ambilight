@@ -17,6 +17,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             "leds_top", "leds_right", "leds_bottom", "leds_left",
             "skip_leading", "total_leds",
             "wled_preset", "wled_fx", "wled_sx", "wled_ix", "wled_pal",
+            "standby_wled_preset", "standby_wled_fx", "standby_wled_sx", "standby_wled_ix", "standby_wled_pal",
         )
         for (key in numeric) {
             findPreference<EditTextPreference>(key)?.setOnBindEditTextListener { edit ->
@@ -34,14 +35,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
             edit.setSelection(edit.text.length)
         }
 
-        findPreference<EditTextPreference>("black_color")?.onPreferenceChangeListener =
-            Preference.OnPreferenceChangeListener { _, newValue ->
-                val ok = Config.isValidColor(newValue as String)
-                if (!ok) {
-                    Toast.makeText(requireContext(), "Ungültige Farbe, Beispiel: #FF6A00", Toast.LENGTH_LONG).show()
+        for (key in listOf("black_color", "standby_color")) {
+            findPreference<EditTextPreference>(key)?.onPreferenceChangeListener =
+                Preference.OnPreferenceChangeListener { _, newValue ->
+                    val ok = Config.isValidColor(newValue as String)
+                    if (!ok) {
+                        Toast.makeText(requireContext(), "Ungültige Farbe, Beispiel: #FF6A00", Toast.LENGTH_LONG).show()
+                    }
+                    ok
                 }
-                ok
-            }
+        }
 
         findPreference<Preference>("read_led_count")?.setOnPreferenceClickListener {
             readLedCount()

@@ -99,4 +99,17 @@
         <item>comet</item>
         <item>sparkle</item>
     </string-array>
+
+    <string-array name="standby_action_entries">
+        <item>LEDs ausschalten (WLED aus)</item>
+        <item>WLED übernimmt (Preset / Effekt)</item>
+        <item>Feste Farbe</item>
+        <item>Effekt der App</item>
+    </string-array>
+    <string-array name="standby_action_values">
+        <item>off</item>
+        <item>wled</item>
+        <item>static</item>
+        <item>effect</item>
+    </string-array>
 </resources>
