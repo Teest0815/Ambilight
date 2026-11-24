@@ -15,6 +15,8 @@ Auf dem Startbildschirm siehst du links die Vorschau, den Status und die Knöpfe
 - **Schwarze Balken** werden automatisch erkannt (oben/unten und links/rechts) und ignoriert, mit einstellbarer Schwelle, Verzögerung, maximaler Balkenbreite und optional symmetrischer Erkennung (weniger Fehlerkennung in dunklen Szenen)
 - **Verhalten bei schwarzem Bild** (z. B. Netflix mit Kopierschutz): LEDs aus, letzte Farben halten, feste Farbe, Effekt der App (Atmen, Regenbogen, Farbwechsel, Komet, Funkeln) oder WLED übernimmt mit eigenem Preset bzw. Effekt (inkl. Geschwindigkeit, Intensität, Palette)
 - **Weiche Übergänge** zwischen Ambilight, schwarzem Bild und Standby (Dauer einstellbar, 0 = sofort). Bei „WLED übernimmt“ wird zuerst auf Schwarz überblendet und dann der WLED-Effekt gestartet (mit WLED-eigener Übergangszeit), beim Zurückwechseln blendet das Ambilight aus Schwarz ein
+- **LED-Test** (Knopf „LEDs testen“): Layout-Test, Dimmen (Weiß, Rot, Grün, Blau), ruckartig wechselnde Farben, RGB-Rad oder alles nacheinander. Der Knopf stoppt den Test jederzeit
+- **Übersichtliche Einstellungen**: In „Schwarzes Bild“ und „Standby“ werden nur die Einstellungen gezeigt, die zur gewählten Aktion passen (z. B. bei „WLED übernimmt“ nur die WLED-Werte, und bei gewähltem Preset nicht die Effekt-ID)
 - **Farbanpassung**: Durchschnitt oder kräftige Farben bevorzugen, Glättung, Helligkeit, Sättigung, Gamma, Weißabgleich (R/G/B)
 - **WLED automatisch finden** (mDNS und Netzwerk-Scan), Adresse und LED-Anzahl werden übernommen
 - **Standby** (Bildschirm aus, optional auch Bildschirmschoner): Das Ambilight pausiert, und du wählst, was dann passiert: WLED aus, WLED übernimmt mit eigenem Preset oder Effekt (inkl. Geschwindigkeit, Intensität, Palette), feste Farbe oder ein App-Effekt. Beim Aufwachen geht es automatisch weiter.
@@ -26,7 +28,7 @@ Auf dem Startbildschirm siehst du links die Vorschau, den Status und die Knöpfe
 
 1. APK installieren (siehe unten) und App öffnen.
 2. Kachel **WLED-Verbindung** öffnen, „WLED automatisch suchen“ drücken und das Gerät auswählen (oder die WLED-Adresse von Hand eintragen).
-3. Kachel **LED-Layout** öffnen und LED-Anzahl pro Seite, Startecke und Laufrichtung einstellen. Zurück auf dem Startbildschirm: Mit „LED-Layout testen“ prüfen: Oben leuchtet rot, rechts grün, unten blau, links gelb, und ein weißer Punkt läuft vom ersten bis zum letzten LED.
+3. Kachel **LED-Layout** öffnen und LED-Anzahl pro Seite, Startecke und Laufrichtung einstellen. Zurück auf dem Startbildschirm: Mit „LEDs testen“ → „Layout“ prüfen: Oben leuchtet rot, rechts grün, unten blau, links gelb, und ein weißer Punkt läuft vom ersten bis zum letzten LED.
 4. „Ambilight starten“ und die Berechtigung zur Bildschirmaufnahme bestätigen.
 
 ## APK bauen

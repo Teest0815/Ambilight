@@ -44,6 +44,13 @@
         android:key="standby_effect"
         android:title="Standby: Effekt der App"
         app:useSimpleSummaryProvider="true" />
+    <SeekBarPreference
+        android:defaultValue="40"
+        android:key="standby_effect_speed"
+        android:max="100"
+        android:title="Standby: Effektgeschwindigkeit"
+        app:min="1"
+        app:showSeekBarValue="true" />
     <EditTextPreference
         android:defaultValue="0"
         android:dialogMessage="Nummer des WLED-Presets. 0 = kein Preset, dann wird die Effekt-ID unten verwendet."

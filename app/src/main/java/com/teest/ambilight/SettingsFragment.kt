@@ -1,5 +1,6 @@
 package com.teest.ambilight
 
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
@@ -55,6 +56,59 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("find_wled")?.setOnPreferenceClickListener {
             findWled()
             true
+        }
+    }
+
+    // ---- show only the settings that belong to the chosen action ----
+
+    private val visibilityListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key in VISIBILITY_KEYS) updateVisibility()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(visibilityListener)
+        updateVisibility()
+    }
+
+    override fun onPause() {
+        preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(visibilityListener)
+        super.onPause()
+    }
+
+    /** Works for every settings page: preferences that do not exist on the current page are simply skipped. */
+    private fun updateVisibility() {
+        val p = preferenceManager.sharedPreferences ?: return
+        fun show(key: String, visible: Boolean) {
+            findPreference<Preference>(key)?.isVisible = visible
+        }
+        fun number(key: String): Int = (p.all[key] as? String)?.trim()?.toIntOrNull() ?: 0
+
+        // Black screen
+        val black = p.getString("black_action", "off") ?: "off"
+        val blackColor = black == "static" || black == "effect"
+        val blackWled = black == "wled"
+        show("black_fade_ms", black != "hold")
+        show("black_color", blackColor)
+        show("black_brightness", blackColor)
+        show("black_effect", black == "effect")
+        show("effect_speed", black == "effect")
+        show("wled_preset", blackWled)
+        for (key in listOf("wled_fx", "wled_sx", "wled_ix", "wled_pal")) {
+            show(key, blackWled && number("wled_preset") == 0)
+        }
+
+        // Standby
+        val standby = p.getString("standby_action", "off") ?: "off"
+        val standbyColor = standby == "static" || standby == "effect"
+        val standbyWled = standby == "wled"
+        show("standby_color", standbyColor)
+        show("standby_brightness", standbyColor)
+        show("standby_effect", standby == "effect")
+        show("standby_effect_speed", standby == "effect")
+        show("standby_wled_preset", standbyWled)
+        for (key in listOf("standby_wled_fx", "standby_wled_sx", "standby_wled_ix", "standby_wled_pal")) {
+            show(key, standbyWled && number("standby_wled_preset") == 0)
         }
     }
 
@@ -151,6 +205,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     companion object {
+        private val VISIBILITY_KEYS = setOf("black_action", "wled_preset", "standby_action", "standby_wled_preset")
         private const val ARG_XML = "xml"
 
         fun newInstance(xmlRes: Int) = SettingsFragment().apply {

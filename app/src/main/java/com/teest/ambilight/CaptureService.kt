@@ -346,7 +346,7 @@ class CaptureService : Service() {
                             dt,
                             layout.count,
                             cfg.standbyColor,
-                            cfg.effectSpeed,
+                            cfg.standbyEffectSpeed,
                             cfg.standbyBrightness / 100f,
                             target,
                         )
