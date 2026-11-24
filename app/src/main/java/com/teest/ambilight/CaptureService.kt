@@ -5,8 +5,10 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.pm.ServiceInfo
 import android.graphics.Color
@@ -24,6 +26,7 @@ import android.os.SystemClock
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CancellationException
@@ -49,11 +52,27 @@ class CaptureService : Service() {
     private lateinit var prefs: SharedPreferences
 
     @Volatile
-    private var config: Config = Config.load(emptyPrefsFallback())
+    private var config: Config = Config.load(EmptyPrefs)
 
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { p, _ ->
         config = Config.load(p)
     }
+
+    /** True while the screen is off (TV in standby) or a screensaver runs. */
+    @Volatile
+    private var paused = false
+
+    private val screenReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                Intent.ACTION_SCREEN_OFF -> paused = true
+                Intent.ACTION_SCREEN_ON -> paused = false
+                Intent.ACTION_DREAMING_STARTED -> if (config.pauseOnDream) paused = true
+                Intent.ACTION_DREAMING_STOPPED -> paused = false
+            }
+        }
+    }
+    private var receiverRegistered = false
 
     private var projection: MediaProjection? = null
     private var virtualDisplay: VirtualDisplay? = null
@@ -75,6 +94,15 @@ class CaptureService : Service() {
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
         config = Config.load(prefs)
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
+
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_DREAMING_STARTED)
+            addAction(Intent.ACTION_DREAMING_STOPPED)
+        }
+        ContextCompat.registerReceiver(this, screenReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        receiverRegistered = true
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -153,6 +181,7 @@ class CaptureService : Service() {
         dispH = dm.heightPixels.coerceAtLeast(1)
         dpi = dm.densityDpi
 
+        paused = false
         AmbilightState.running.value = true
         AmbilightState.status.value = "Warte auf Bild …"
         loopJob = scope.launch {
@@ -168,8 +197,8 @@ class CaptureService : Service() {
     }
 
     /** (Re)creates the image reader if the capture resolution changed. Must run on the loop thread. */
-    private fun ensureReader(cfg: Config) {
-        val w = cfg.captureWidth.coerceAtLeast(32)
+    private fun ensureReader(width: Int) {
+        val w = width.coerceAtLeast(32)
         if (reader != null && w == readerWidth) return
         val h = (w.toLong() * dispH / dispW).toInt().coerceAtLeast(18)
         val newReader = ImageReader.newInstance(w, h, PixelFormat.RGBA_8888, 2)
@@ -194,6 +223,7 @@ class CaptureService : Service() {
         val sender = WledSender()
         val engine = EffectEngine()
         val bars = BarTracker()
+        val sampler = LedSampler()
 
         var layout = LedLayout(config.layout)
         var processor = ColorProcessor(layout.count)
@@ -220,6 +250,23 @@ class CaptureService : Service() {
         var last = startTime
         var cfg = config
 
+        // adaptive performance
+        var effFps = cfg.fps
+        var effWidth = cfg.captureWidth
+        var seenFps = cfg.fps
+        var seenWidth = cfg.captureWidth
+        var busyEma = 0f
+        var lastAdapt = startTime
+
+        // standby and reconnect
+        var wasPaused = false
+        var prevError: String? = null
+
+        // two alternating buffers for the preview, so no new array is allocated for every update
+        var previewA = IntArray(0)
+        var previewB = IntArray(0)
+        var previewFlip = false
+
         if (cfg.wledOnStart) {
             val host = cfg.host
             thread { WledSender.postState(host, WledSender.onJson(true)) }
@@ -232,6 +279,44 @@ class CaptureService : Service() {
                 val dt = (loopStart - last).coerceIn(1L, 250L).toFloat()
                 last = loopStart
 
+                // ---- standby: stop sending, switch WLED off, wait ----
+                if (paused) {
+                    if (!wasPaused) {
+                        wasPaused = true
+                        java.util.Arrays.fill(out, 0.toByte())
+                        repeat(2) { sender.send(cfg, out) }
+                        if (cfg.standbyWledOff) {
+                            val host = cfg.host
+                            thread { WledSender.postState(host, WledSender.onJson(false)) }
+                        }
+                        AmbilightState.colors.value = null
+                        AmbilightState.status.value = "Pausiert (Standby)"
+                    }
+                    try {
+                        reader?.acquireLatestImage()?.close() // do not keep stale frames
+                    } catch (e: Exception) {
+                        // ignore
+                    }
+                    delay(400)
+                    continue
+                }
+                if (wasPaused) {
+                    wasPaused = false
+                    haveFrame = false
+                    frameBlack = false
+                    blackSince = 0L
+                    inBlack = false
+                    handover = false
+                    snapNext = true
+                    bars.reset()
+                    last = loopStart
+                    if (cfg.standbyWledOff || cfg.wledOnStart) {
+                        val host = cfg.host
+                        thread { WledSender.postState(host, WledSender.onJson(true)) }
+                    }
+                    AmbilightState.status.value = "Warte auf Bild …"
+                }
+
                 if (cfg.layout != layout.spec) {
                     layout = LedLayout(cfg.layout)
                     processor = ColorProcessor(layout.count)
@@ -242,7 +327,19 @@ class CaptureService : Service() {
                     snapNext = true
                 }
 
-                ensureReader(cfg)
+                // ---- adaptive performance: user settings are the upper limit ----
+                if (cfg.fps != seenFps || cfg.captureWidth != seenWidth) {
+                    seenFps = cfg.fps
+                    seenWidth = cfg.captureWidth
+                    effFps = cfg.fps
+                    effWidth = cfg.captureWidth
+                    busyEma = 0f
+                }
+                if (!cfg.adaptive) {
+                    effFps = cfg.fps
+                    effWidth = cfg.captureWidth
+                }
+                ensureReader(effWidth)
 
                 // ---- grab the newest frame, if there is one ----
                 var newFrame = false
@@ -322,9 +419,8 @@ class CaptureService : Service() {
                             if (x1 - x0 < fw / 5 || y1 - y0 < fh / 5) {
                                 x0 = 0; x1 = fw; y0 = 0; y1 = fh
                             }
-                            FrameAnalyzer.ledColors(
-                                frame, fStride, x0, y0, x1, y1, layout, cfg.vibrant, target,
-                            )
+                            sampler.update(layout, x0, y0, x1, y1)
+                            sampler.colors(frame, fStride, cfg.vibrant, target)
                             if (!frameBlack) target.copyInto(lastGood)
                         }
                     } else {
@@ -369,29 +465,63 @@ class CaptureService : Service() {
                     java.util.Arrays.fill(out, 0.toByte())
                     processor.writeTo(out, cfg.layout.skipLeading)
                     sender.send(cfg, out)
+
+                    // WLED was unreachable and is back: make sure it is switched on again.
+                    val err = sender.error
+                    if (prevError != null && err == null && cfg.wledOnStart) {
+                        val host = cfg.host
+                        thread { WledSender.postState(host, WledSender.onJson(true)) }
+                    }
+                    prevError = err
                 }
 
-                // ---- tell the UI ----
-                if (loopStart - lastPreview >= 80) {
+                // ---- tell the UI (preview colours only while the screen is visible) ----
+                if (AmbilightState.previewVisible && loopStart - lastPreview >= 80) {
                     lastPreview = loopStart
+                    val n = layout.count
+                    if (previewA.size != n) {
+                        previewA = IntArray(n)
+                        previewB = IntArray(n)
+                    }
+                    val buf = if (previewFlip) previewA else previewB
+                    previewFlip = !previewFlip
                     val cur = processor.cur
-                    AmbilightState.colors.value = IntArray(layout.count) { i ->
-                        Color.rgb(
+                    for (i in 0 until n) {
+                        buf[i] = Color.rgb(
                             cur[i * 3].toInt().coerceIn(0, 255),
                             cur[i * 3 + 1].toInt().coerceIn(0, 255),
                             cur[i * 3 + 2].toInt().coerceIn(0, 255),
                         )
                     }
+                    AmbilightState.colors.value = buf
                 }
                 if (loopStart - lastStatus >= 500) {
                     lastStatus = loopStart
                     AmbilightState.status.value = buildStatus(
-                        cfg, haveFrame, inBlack, handover, bars.applied, sender.error,
+                        cfg, effFps, effWidth, haveFrame, inBlack, handover, bars.applied, sender.error,
                     )
                 }
 
+                // ---- adapt frame rate / resolution if this device cannot keep up ----
                 val spent = SystemClock.elapsedRealtime() - loopStart
-                delay(maxOf(1L, 1000L / cfg.fps - spent))
+                busyEma = if (busyEma == 0f) spent.toFloat() else busyEma * 0.9f + spent * 0.1f
+                if (cfg.adaptive && loopStart - lastAdapt >= 3000) {
+                    lastAdapt = loopStart
+                    val budget = 1000f / effFps
+                    if (busyEma > budget * 0.85f) {
+                        if (effFps > MIN_ADAPTIVE_FPS) {
+                            effFps = maxOf(MIN_ADAPTIVE_FPS, (effFps * 0.8f).toInt())
+                        } else {
+                            val smaller = WIDTH_STEPS.lastOrNull { it < effWidth }
+                            if (smaller != null) effWidth = smaller
+                        }
+                        busyEma = 0f
+                    } else if (effFps < cfg.fps && busyEma < 1000f / (effFps + 5) * 0.6f) {
+                        effFps = min(cfg.fps, effFps + 5)
+                    }
+                }
+
+                delay(maxOf(1L, 1000L / effFps - spent))
             }
         } finally {
             // Leave the strip dark (unless WLED is showing its own effect right now).
@@ -417,6 +547,8 @@ class CaptureService : Service() {
 
     private fun buildStatus(
         cfg: Config,
+        effFps: Int,
+        effWidth: Int,
         haveFrame: Boolean,
         inBlack: Boolean,
         handover: Boolean,
@@ -425,7 +557,10 @@ class CaptureService : Service() {
     ): String {
         if (error != null) return "Läuft, aber: $error"
         if (!haveFrame) return "Warte auf Bild …"
-        val sb = StringBuilder("Läuft · ${cfg.fps} FPS")
+        val sb = StringBuilder("Läuft · $effFps FPS")
+        if (effFps != cfg.fps || effWidth != cfg.captureWidth) {
+            sb.append(" (automatisch angepasst, ${effWidth} px)")
+        }
         if (inBlack) {
             sb.append(" · Schwarzes Bild: ")
             sb.append(
@@ -467,6 +602,13 @@ class CaptureService : Service() {
 
     override fun onDestroy() {
         prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
+        if (receiverRegistered) {
+            try {
+                unregisterReceiver(screenReceiver)
+            } catch (e: Exception) {
+            }
+            receiverRegistered = false
+        }
         val job = loopJob
         job?.cancel()
         if (job != null) {
@@ -489,9 +631,8 @@ class CaptureService : Service() {
         const val EXTRA_RESULT_CODE = "result_code"
         const val EXTRA_DATA = "data"
         private const val NOTIF_ID = 1
-
-        /** Placeholder until onCreate runs: Config needs preferences, so use plain defaults. */
-        private fun emptyPrefsFallback(): SharedPreferences = EmptyPrefs
+        private const val MIN_ADAPTIVE_FPS = 12
+        private val WIDTH_STEPS = intArrayOf(80, 120, 160, 240, 320)
     }
 }
 

@@ -1,7 +1,5 @@
 package com.teest.ambilight
 
-import kotlin.math.ceil
-import kotlin.math.max
 import kotlin.math.min
 
 /** Pixel maths on the small RGBA frame (byte order R, G, B, A). */
@@ -78,70 +76,6 @@ object FrameAnalyzer {
         out[1] = bottom
         out[2] = left
         out[3] = right
-    }
-
-    /**
-     * Average colour of every LED region inside the picture rectangle [cx0,cx1) x [cy0,cy1).
-     * out receives r,g,b (0..255) per LED.
-     */
-    fun ledColors(
-        b: ByteArray,
-        stride: Int,
-        cx0: Int,
-        cy0: Int,
-        cx1: Int,
-        cy1: Int,
-        layout: LedLayout,
-        vibrant: Boolean,
-        out: FloatArray,
-    ) {
-        val cw = cx1 - cx0
-        val ch = cy1 - cy0
-        for (k in 0 until layout.count) {
-            val r = layout.regions[k]
-            var px0 = cx0 + (r.x0 * cw).toInt()
-            var px1 = cx0 + ceil(r.x1 * cw).toInt()
-            var py0 = cy0 + (r.y0 * ch).toInt()
-            var py1 = cy0 + ceil(r.y1 * ch).toInt()
-            px0 = px0.coerceIn(cx0, cx1 - 1)
-            py0 = py0.coerceIn(cy0, cy1 - 1)
-            px1 = max(px0 + 1, min(px1, cx1))
-            py1 = max(py0 + 1, min(py1, cy1))
-
-            var sr = 0f
-            var sg = 0f
-            var sb = 0f
-            var sw = 0f
-            for (y in py0 until py1) {
-                var i = y * stride + px0 * 4
-                for (x in px0 until px1) {
-                    val rr = b[i].toInt() and 0xFF
-                    val gg = b[i + 1].toInt() and 0xFF
-                    val bb = b[i + 2].toInt() and 0xFF
-                    val wgt = if (vibrant) {
-                        val s = (max(rr, max(gg, bb)) - min(rr, min(gg, bb))) / 255f
-                        0.1f + s * s * 4f
-                    } else {
-                        1f
-                    }
-                    sr += rr * wgt
-                    sg += gg * wgt
-                    sb += bb * wgt
-                    sw += wgt
-                    i += 4
-                }
-            }
-            val o = k * 3
-            if (sw > 0f) {
-                out[o] = sr / sw
-                out[o + 1] = sg / sw
-                out[o + 2] = sb / sw
-            } else {
-                out[o] = 0f
-                out[o + 1] = 0f
-                out[o + 2] = 0f
-            }
-        }
     }
 }
 

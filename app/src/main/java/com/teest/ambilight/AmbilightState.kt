@@ -9,4 +9,8 @@ object AmbilightState {
 
     /** Current LED colours (ARGB) for the live preview, null when nothing is running. */
     val colors = MutableStateFlow<IntArray?>(null)
+
+    /** True while the main screen is visible. The service only prepares preview colours then. */
+    @Volatile
+    var previewVisible = false
 }

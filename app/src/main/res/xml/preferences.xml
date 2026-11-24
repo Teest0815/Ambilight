@@ -3,6 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory android:title="WLED-Verbindung">
+        <Preference
+            android:key="find_wled"
+            android:summary="Sucht WLED-Geräte im WLAN (mDNS und Netzwerk-Scan) und übernimmt Adresse und LED-Anzahl"
+            android:title="WLED automatisch suchen" />
         <EditTextPreference
             android:defaultValue=""
             android:dialogTitle="IP-Adresse oder Hostname von WLED"
@@ -116,6 +120,11 @@
             android:key="capture_width"
             android:title="Aufnahmeauflösung"
             app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="adaptive"
+            android:summary="Senkt Bildrate und Auflösung automatisch, wenn das Gerät nicht mitkommt"
+            android:title="Leistung automatisch anpassen" />
         <ListPreference
             android:defaultValue="average"
             android:entries="@array/color_mode_entries"
@@ -297,6 +306,16 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="System">
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="wled_off_standby"
+            android:summary="Im Standby werden die LEDs ausgeschaltet, beim Aufwachen wieder eingeschaltet"
+            android:title="WLED im Standby ausschalten" />
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="pause_on_dream"
+            android:summary="Das Ambilight pausiert auch, wenn der Bildschirmschoner läuft"
+            android:title="Bei Bildschirmschoner pausieren" />
         <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="auto_start"

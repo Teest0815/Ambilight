@@ -3,6 +3,7 @@ package com.teest.ambilight
 import android.os.Bundle
 import android.text.InputType
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -46,6 +47,73 @@ class SettingsFragment : PreferenceFragmentCompat() {
             readLedCount()
             true
         }
+        findPreference<Preference>("find_wled")?.setOnPreferenceClickListener {
+            findWled()
+            true
+        }
+    }
+
+    override fun onDestroyView() {
+        discovery?.cancel()
+        discovery = null
+        searchDialog?.dismiss()
+        searchDialog = null
+        super.onDestroyView()
+    }
+
+    private var discovery: WledDiscovery? = null
+    private var searchDialog: AlertDialog? = null
+
+    private fun findWled() {
+        val ctx = requireContext()
+        discovery?.cancel()
+        val d = WledDiscovery(ctx.applicationContext)
+        discovery = d
+        searchDialog?.dismiss()
+        searchDialog = AlertDialog.Builder(ctx)
+            .setTitle("WLED suchen")
+            .setMessage("Suche im Netzwerk … (dauert etwa 5 Sekunden)")
+            .setNegativeButton("Abbrechen") { _, _ -> d.cancel() }
+            .setOnCancelListener { d.cancel() }
+            .show()
+        d.start { list ->
+            searchDialog?.dismiss()
+            searchDialog = null
+            if (!isAdded) return@start
+            showFound(list)
+        }
+    }
+
+    private fun showFound(list: List<FoundWled>) {
+        val ctx = requireContext()
+        when {
+            list.isEmpty() -> AlertDialog.Builder(ctx)
+                .setTitle("Kein WLED gefunden")
+                .setMessage("Läuft WLED im selben WLAN wie der Fernseher? Sonst kannst du die IP-Adresse von Hand eintragen.")
+                .setPositiveButton("OK", null)
+                .show()
+            list.size == 1 -> applyFound(list[0])
+            else -> {
+                val labels = list.map {
+                    val leds = it.ledCount?.let { n -> " · $n LEDs" } ?: ""
+                    "${it.name} (${it.ip})$leds"
+                }.toTypedArray()
+                AlertDialog.Builder(ctx)
+                    .setTitle("WLED auswählen")
+                    .setItems(labels) { _, which -> applyFound(list[which]) }
+                    .setNegativeButton("Abbrechen", null)
+                    .show()
+            }
+        }
+    }
+
+    private fun applyFound(w: FoundWled) {
+        findPreference<EditTextPreference>("host")?.text = w.ip
+        if (w.ledCount != null) {
+            findPreference<EditTextPreference>("total_leds")?.text = w.ledCount.toString()
+        }
+        val leds = w.ledCount?.let { " mit $it LEDs" } ?: ""
+        Toast.makeText(requireContext(), "${w.name} (${w.ip})$leds übernommen", Toast.LENGTH_LONG).show()
     }
 
     private fun readLedCount() {

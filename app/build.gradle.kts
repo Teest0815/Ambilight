@@ -11,13 +11,31 @@ android {
         applicationId = "com.teest.ambilight"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
+    }
+
+    // Fester Schlüssel, damit neue Versionen über die alte installiert werden können.
+    // Der Schlüssel liegt im (privaten) Repository. Wird das Repo öffentlich, bitte einen neuen
+    // Schlüssel erzeugen und die Passwörter als GitHub-Secrets hinterlegen.
+    signingConfigs {
+        create("release") {
+            storeFile = file("ambilight-release.jks")
+            storePassword = "ambilight-release"
+            keyAlias = "ambilight"
+            keyPassword = "ambilight-release"
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -32,6 +50,7 @@ android {
 
     lint {
         abortOnError = false
+        checkReleaseBuilds = false
     }
 }
 

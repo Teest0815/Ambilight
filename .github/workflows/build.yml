@@ -21,12 +21,12 @@ jobs:
         with:
           gradle-version: "8.7"
 
-      - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+      - name: Build signed release APK
+        run: gradle assembleRelease --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Ambilight-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: Ambilight-apk
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error

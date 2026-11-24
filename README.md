@@ -11,19 +11,24 @@ Android-TV-App, die den Bildschirm aufnimmt und daraus ein Ambilight für einen 
 - **Schwarze Balken** werden automatisch erkannt (oben/unten und links/rechts) und ignoriert, mit einstellbarer Schwelle, Verzögerung, maximaler Balkenbreite und optional symmetrischer Erkennung (weniger Fehlerkennung in dunklen Szenen)
 - **Verhalten bei schwarzem Bild** (z. B. Netflix mit Kopierschutz): LEDs aus, letzte Farben halten, feste Farbe, Effekt der App (Atmen, Regenbogen, Farbwechsel, Komet, Funkeln) oder WLED übernimmt mit eigenem Preset bzw. Effekt (inkl. Geschwindigkeit, Intensität, Palette)
 - **Farbanpassung**: Durchschnitt oder kräftige Farben bevorzugen, Glättung, Helligkeit, Sättigung, Gamma, Weißabgleich (R/G/B)
-- WLED beim Start ein- und beim Beenden ausschalten, LED-Anzahl direkt aus WLED lesen
+- **WLED automatisch finden** (mDNS und Netzwerk-Scan), Adresse und LED-Anzahl werden übernommen
+- **Standby**: Bei Bildschirm aus (und optional beim Bildschirmschoner) pausiert das Ambilight, WLED wird ausgeschaltet und beim Aufwachen wieder eingeschaltet
+- **Automatische Leistungsanpassung**: Bildrate und Auflösung werden gesenkt, wenn das Gerät nicht mitkommt (die eigenen Einstellungen sind die Obergrenze)
+- WLED beim Start ein- und beim Beenden ausschalten, LED-Anzahl direkt aus WLED lesen, nach einem WLED-Neustart wird es wieder eingeschaltet
 - Optional Start nach dem Einschalten des Fernsehers
 
 ## Einrichtung
 
 1. APK installieren (siehe unten) und App öffnen.
-2. WLED-Adresse eintragen, ggf. „WLED abfragen“ drücken.
+2. „WLED automatisch suchen“ drücken und das Gerät auswählen (oder die WLED-Adresse von Hand eintragen).
 3. LED-Anzahl pro Seite, Startecke und Laufrichtung einstellen. Mit „LED-Layout testen“ prüfen: Oben leuchtet rot, rechts grün, unten blau, links gelb, und ein weißer Punkt läuft vom ersten bis zum letzten LED.
 4. „Ambilight starten“ und die Berechtigung zur Bildschirmaufnahme bestätigen.
 
 ## APK bauen
 
-Bei jedem Push baut GitHub Actions die APK (`.github/workflows/build.yml`). Sie liegt danach unter **Actions → letzter Lauf → Artifacts → Ambilight-debug-apk**.
+Bei jedem Push baut GitHub Actions eine signierte Release-APK (`.github/workflows/build.yml`). Sie liegt danach unter **Actions → letzter Lauf → Artifacts → Ambilight-apk** (als ZIP, darin `app-release.apk`).
+
+Die APK wird immer mit demselben Schlüssel (`app/ambilight-release.jks`) signiert. Neue Versionen lassen sich deshalb direkt über die alte installieren, Einstellungen bleiben erhalten. Der Schlüssel liegt im privaten Repository. Wird das Repo öffentlich, bitte einen neuen Schlüssel erzeugen und die Passwörter als GitHub-Secrets hinterlegen.
 
 ## Bekannte Grenzen
 

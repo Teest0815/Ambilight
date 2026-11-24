@@ -55,6 +55,9 @@ data class Config(
     val wledIx: Int,
     val wledPal: Int,
     val autoStart: Boolean,
+    val adaptive: Boolean,
+    val standbyWledOff: Boolean,
+    val pauseOnDream: Boolean,
 ) {
     companion object {
         const val DEFAULT_BLACK_COLOR = "#FF6A00"
@@ -118,6 +121,9 @@ data class Config(
                 wledIx = p.num("wled_ix", 128).coerceIn(0, 255),
                 wledPal = p.num("wled_pal", 0).coerceIn(0, 255),
                 autoStart = p.bool("auto_start", false),
+                adaptive = p.bool("adaptive", true),
+                standbyWledOff = p.bool("wled_off_standby", true),
+                pauseOnDream = p.bool("pause_on_dream", true),
             )
         }
 

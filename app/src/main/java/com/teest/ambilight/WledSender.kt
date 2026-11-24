@@ -16,6 +16,12 @@ class WledSender {
     private var lastResolveFail = 0L
     private var seq = 0
 
+    // Packet buffers are reused, so sending does not allocate memory for every frame.
+    private val ddpBuf = ByteArray(DDP_HEADER + DDP_MAX_DATA)
+    private var ddpPacket: DatagramPacket? = null
+    private val udpBuf = ByteArray(4 + UDP_MAX_PIXELS * 3)
+    private var udpPacket: DatagramPacket? = null
+
     /** Last error as text, null if everything is fine. */
     var error: String? = null
         private set
@@ -31,6 +37,8 @@ class WledSender {
         return try {
             address = InetAddress.getByName(host)
             resolvedHost = host
+            ddpPacket = null
+            udpPacket = null
             if (socket == null) socket = DatagramSocket()
             error = null
             true
@@ -41,6 +49,16 @@ class WledSender {
             error = "WLED nicht gefunden: $host"
             false
         }
+    }
+
+    /** Drops socket and address so the next send resolves the host again (e.g. after the network was lost). */
+    private fun resetTarget() {
+        socket?.close()
+        socket = null
+        address = null
+        resolvedHost = ""
+        ddpPacket = null
+        udpPacket = null
     }
 
     /** rgb = r,g,b for every pixel of the strip. */
@@ -54,31 +72,32 @@ class WledSender {
             error = null
         } catch (e: IOException) {
             error = "Senden fehlgeschlagen: ${e.message}"
+            resetTarget()
         }
     }
 
     private fun sendDdp(rgb: ByteArray) {
         val sock = socket ?: return
         val addr = address ?: return
-        val maxData = 480 * 3
+        val packet = ddpPacket ?: DatagramPacket(ddpBuf, ddpBuf.size, addr, 4048).also { ddpPacket = it }
         var offset = 0
         seq = if (seq >= 15) 1 else seq + 1
         while (offset < rgb.size) {
-            val len = minOf(maxData, rgb.size - offset)
+            val len = minOf(DDP_MAX_DATA, rgb.size - offset)
             val last = offset + len >= rgb.size
-            val packet = ByteArray(10 + len)
-            packet[0] = (0x40 or (if (last) 0x01 else 0x00)).toByte() // version 1, push on the last chunk
-            packet[1] = seq.toByte()
-            packet[2] = 0x01 // RGB
-            packet[3] = 0x01 // default output device
-            packet[4] = (offset ushr 24).toByte()
-            packet[5] = (offset ushr 16).toByte()
-            packet[6] = (offset ushr 8).toByte()
-            packet[7] = offset.toByte()
-            packet[8] = (len ushr 8).toByte()
-            packet[9] = len.toByte()
-            System.arraycopy(rgb, offset, packet, 10, len)
-            sock.send(DatagramPacket(packet, packet.size, addr, 4048))
+            ddpBuf[0] = (0x40 or (if (last) 0x01 else 0x00)).toByte() // version 1, push on the last chunk
+            ddpBuf[1] = seq.toByte()
+            ddpBuf[2] = 0x01 // RGB
+            ddpBuf[3] = 0x01 // default output device
+            ddpBuf[4] = (offset ushr 24).toByte()
+            ddpBuf[5] = (offset ushr 16).toByte()
+            ddpBuf[6] = (offset ushr 8).toByte()
+            ddpBuf[7] = offset.toByte()
+            ddpBuf[8] = (len ushr 8).toByte()
+            ddpBuf[9] = len.toByte()
+            System.arraycopy(rgb, offset, ddpBuf, DDP_HEADER, len)
+            packet.setData(ddpBuf, 0, DDP_HEADER + len)
+            sock.send(packet)
             offset += len
         }
     }
@@ -87,29 +106,31 @@ class WledSender {
     private fun sendDnrgb(rgb: ByteArray) {
         val sock = socket ?: return
         val addr = address ?: return
+        val packet = udpPacket ?: DatagramPacket(udpBuf, udpBuf.size, addr, 21324).also { udpPacket = it }
         val pixels = rgb.size / 3
-        val perPacket = 489
         var start = 0
         while (start < pixels) {
-            val count = minOf(perPacket, pixels - start)
-            val packet = ByteArray(4 + count * 3)
-            packet[0] = 4
-            packet[1] = 2 // seconds until WLED leaves realtime mode when packets stop
-            packet[2] = (start ushr 8).toByte()
-            packet[3] = start.toByte()
-            System.arraycopy(rgb, start * 3, packet, 4, count * 3)
-            sock.send(DatagramPacket(packet, packet.size, addr, 21324))
+            val count = minOf(UDP_MAX_PIXELS, pixels - start)
+            udpBuf[0] = 4
+            udpBuf[1] = 2 // seconds until WLED leaves realtime mode when packets stop
+            udpBuf[2] = (start ushr 8).toByte()
+            udpBuf[3] = start.toByte()
+            System.arraycopy(rgb, start * 3, udpBuf, 4, count * 3)
+            packet.setData(udpBuf, 0, 4 + count * 3)
+            sock.send(packet)
             start += count
         }
     }
 
     fun close() {
-        socket?.close()
-        socket = null
-        address = null
+        resetTarget()
     }
 
     companion object {
+        private const val DDP_HEADER = 10
+        private const val DDP_MAX_DATA = 480 * 3
+        private const val UDP_MAX_PIXELS = 489
+
         /** POST to the WLED JSON API. Blocking: never call on the main thread. */
         fun postState(host: String, json: String): Boolean {
             if (host.isEmpty()) return false

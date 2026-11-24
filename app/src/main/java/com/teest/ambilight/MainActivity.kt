@@ -100,6 +100,16 @@ class MainActivity : AppCompatActivity() {
         handleAutostart(intent)
     }
 
+    override fun onStart() {
+        super.onStart()
+        AmbilightState.previewVisible = true
+    }
+
+    override fun onStop() {
+        AmbilightState.previewVisible = false
+        super.onStop()
+    }
+
     override fun onDestroy() {
         prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
         super.onDestroy()
@@ -119,7 +129,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestCapture() {
         if (Config.load(prefs).host.isEmpty()) {
-            Toast.makeText(this, "Bitte zuerst die WLED-Adresse eingeben", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Bitte zuerst die WLED-Adresse eingeben oder unter Einstellungen „WLED automatisch suchen“ drücken", Toast.LENGTH_LONG).show()
             return
         }
         testJob?.cancel()
@@ -139,7 +149,7 @@ class MainActivity : AppCompatActivity() {
         }
         val cfg = Config.load(prefs)
         if (cfg.host.isEmpty()) {
-            Toast.makeText(this, "Bitte zuerst die WLED-Adresse eingeben", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Bitte zuerst die WLED-Adresse eingeben oder unter Einstellungen „WLED automatisch suchen“ drücken", Toast.LENGTH_LONG).show()
             return
         }
         testJob?.cancel()
