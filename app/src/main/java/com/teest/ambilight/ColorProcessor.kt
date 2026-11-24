@@ -63,14 +63,17 @@ class ColorProcessor(private val n: Int) {
     }
 
     /** Writes the current colours as RGB bytes into out, starting at pixel index [startPixel]. */
-    fun writeTo(out: ByteArray, startPixel: Int) {
+    fun writeTo(out: ByteArray, startPixel: Int) = writeTo(cur, out, startPixel)
+
+    /** Writes the given colours (r,g,b floats per LED) as RGB bytes into out. */
+    fun writeTo(src: FloatArray, out: ByteArray, startPixel: Int) {
         for (i in 0 until n) {
             val d = (startPixel + i) * 3
             val o = i * 3
             if (d + 2 >= out.size) break
-            out[d] = (cur[o] + 0.5f).toInt().coerceIn(0, 255).toByte()
-            out[d + 1] = (cur[o + 1] + 0.5f).toInt().coerceIn(0, 255).toByte()
-            out[d + 2] = (cur[o + 2] + 0.5f).toInt().coerceIn(0, 255).toByte()
+            out[d] = (src[o] + 0.5f).toInt().coerceIn(0, 255).toByte()
+            out[d + 1] = (src[o + 1] + 0.5f).toInt().coerceIn(0, 255).toByte()
+            out[d + 2] = (src[o + 2] + 0.5f).toInt().coerceIn(0, 255).toByte()
         }
     }
 }

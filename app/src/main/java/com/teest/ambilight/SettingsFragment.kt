@@ -1,7 +1,9 @@
 package com.teest.ambilight
 
+import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.preference.EditTextPreference
@@ -54,6 +56,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
             findWled()
             true
         }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // Opaque background and no overscroll effect: some TV GPUs otherwise leave old frames on screen while scrolling.
+        view.setBackgroundColor(Color.parseColor("#121212"))
+        listView.setBackgroundColor(Color.parseColor("#121212"))
+        listView.overScrollMode = View.OVER_SCROLL_NEVER
     }
 
     override fun onDestroyView() {

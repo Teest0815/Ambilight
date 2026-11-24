@@ -9,6 +9,15 @@
         android:key="standby_action"
         android:title="Was passiert im Standby?"
         app:useSimpleSummaryProvider="true" />
+    <SeekBarPreference
+        android:defaultValue="800"
+        android:key="standby_fade_ms"
+        android:max="3000"
+        android:summary="Weiches Ein- und Ausblenden beim Wechsel zwischen Ambilight und Standby (0 = sofort)"
+        android:title="Übergang (ms)"
+        app:min="0"
+        app:seekBarIncrement="100"
+        app:showSeekBarValue="true" />
     <SwitchPreferenceCompat
         android:defaultValue="true"
         android:key="pause_on_dream"

@@ -267,6 +267,14 @@ class CaptureService : Service() {
         var previewB = IntArray(0)
         var previewFlip = false
 
+        // transitions: what is shown on the strip right now, and the fade that leads there
+        var shown = FloatArray(layout.count * 3)
+        var crossfade = Crossfade(layout.count)
+        var mode = MODE_AMBIENT
+        var pendingHandover = false // fading to black before WLED takes over
+        var pendingFadeMs = -1 // fade to start with the first frame after standby
+        var standbyDone = false
+
         if (cfg.wledOnStart) {
             val host = cfg.host
             thread { WledSender.postState(host, WledSender.onJson(true)) }
@@ -285,6 +293,8 @@ class CaptureService : Service() {
                     target = FloatArray(layout.count * 3)
                     lastGood = FloatArray(layout.count * 3)
                     out = ByteArray(layout.totalLeds * 3)
+                    shown = FloatArray(layout.count * 3)
+                    crossfade = Crossfade(layout.count)
                     bars.reset()
                     snapNext = true
                 }
@@ -293,24 +303,14 @@ class CaptureService : Service() {
                 if (paused) {
                     if (!wasPaused) {
                         wasPaused = true
-                        val host = cfg.host
-                        when (cfg.standbyAction) {
-                            StandbyAction.OFF -> {
-                                java.util.Arrays.fill(out, 0.toByte())
-                                repeat(2) { sender.send(cfg, out) }
-                                thread { WledSender.postState(host, WledSender.onJson(false)) }
-                            }
-                            StandbyAction.WLED -> {
-                                // WLED shows its own preset/effect as soon as our data stops.
-                                val json = WledSender.handoverJson(
-                                    cfg.standbyPreset, cfg.standbyFx, cfg.standbySx, cfg.standbyIx, cfg.standbyPal,
-                                )
-                                thread { WledSender.postState(host, json) }
-                            }
-                            StandbyAction.STATIC, StandbyAction.EFFECT -> {
-                                snapNext = true
-                                thread { WledSender.postState(host, WledSender.onJson(true)) }
-                            }
+                        standbyDone = false
+                        pendingHandover = false
+                        crossfade.begin(shown, loopStart, cfg.standbyFadeMs)
+                        snapNext = true
+                        mode = MODE_STANDBY
+                        if (cfg.standbyAction == StandbyAction.STATIC || cfg.standbyAction == StandbyAction.EFFECT) {
+                            val host = cfg.host
+                            thread { WledSender.postState(host, WledSender.onJson(true)) }
                         }
                         AmbilightState.colors.value = null
                         AmbilightState.status.value = "Pausiert (Standby): " + when (cfg.standbyAction) {
@@ -325,43 +325,62 @@ class CaptureService : Service() {
                     } catch (e: Exception) {
                         // ignore
                     }
+
+                    // Source colours of the standby behaviour. OFF and WLED fade down to black first.
                     when (cfg.standbyAction) {
+                        StandbyAction.OFF, StandbyAction.WLED -> target.fill(0f)
                         StandbyAction.STATIC -> {
                             val f = cfg.standbyBrightness / 100f
-                            val r = (Color.red(cfg.standbyColor) * f + 0.5f).toInt().toByte()
-                            val g = (Color.green(cfg.standbyColor) * f + 0.5f).toInt().toByte()
-                            val bl = (Color.blue(cfg.standbyColor) * f + 0.5f).toInt().toByte()
-                            java.util.Arrays.fill(out, 0.toByte())
-                            for (k in 0 until layout.count) {
-                                val d = (cfg.layout.skipLeading + k) * 3
-                                if (d + 2 >= out.size) break
-                                out[d] = r
-                                out[d + 1] = g
-                                out[d + 2] = bl
+                            val r = Color.red(cfg.standbyColor) * f
+                            val g = Color.green(cfg.standbyColor) * f
+                            val bl = Color.blue(cfg.standbyColor) * f
+                            for (i in 0 until layout.count) {
+                                target[i * 3] = r
+                                target[i * 3 + 1] = g
+                                target[i * 3 + 2] = bl
                             }
-                            sender.send(cfg, out) // repeated, so WLED stays in live mode
-                            delay(400)
                         }
-                        StandbyAction.EFFECT -> {
-                            engine.render(
-                                cfg.standbyEffect,
-                                loopStart - startTime,
-                                dt,
-                                layout.count,
-                                cfg.standbyColor,
-                                cfg.effectSpeed,
-                                cfg.standbyBrightness / 100f,
-                                target,
-                            )
-                            processor.process(target, cfg, dt, min(cfg.smoothingMs, 120).toFloat(), snapNext)
-                            snapNext = false
-                            java.util.Arrays.fill(out, 0.toByte())
-                            processor.writeTo(out, cfg.layout.skipLeading)
-                            sender.send(cfg, out)
-                            delay(maxOf(1L, 33L - (SystemClock.elapsedRealtime() - loopStart)))
-                        }
-                        else -> delay(400)
+                        StandbyAction.EFFECT -> engine.render(
+                            cfg.standbyEffect,
+                            loopStart - startTime,
+                            dt,
+                            layout.count,
+                            cfg.standbyColor,
+                            cfg.effectSpeed,
+                            cfg.standbyBrightness / 100f,
+                            target,
+                        )
                     }
+                    val effect = cfg.standbyAction == StandbyAction.EFFECT
+                    processor.process(target, cfg, dt, if (effect) min(cfg.smoothingMs, 120).toFloat() else 0f, snapNext)
+                    snapNext = false
+                    crossfade.apply(processor.cur, loopStart, shown)
+
+                    val dark = cfg.standbyAction == StandbyAction.OFF || cfg.standbyAction == StandbyAction.WLED
+                    if (dark && !standbyDone && !crossfade.active) {
+                        standbyDone = true
+                        shown.fill(0f)
+                        val host = cfg.host
+                        if (cfg.standbyAction == StandbyAction.OFF) {
+                            java.util.Arrays.fill(out, 0.toByte())
+                            repeat(2) { sender.send(cfg, out) }
+                            thread { WledSender.postState(host, WledSender.onJson(false)) }
+                        } else {
+                            // WLED shows its own preset/effect as soon as our data stops.
+                            val json = WledSender.handoverJson(
+                                cfg.standbyPreset, cfg.standbyFx, cfg.standbySx, cfg.standbyIx, cfg.standbyPal,
+                                cfg.standbyFadeMs,
+                            )
+                            thread { WledSender.postState(host, json) }
+                        }
+                    }
+                    if (!(dark && standbyDone)) {
+                        java.util.Arrays.fill(out, 0.toByte())
+                        processor.writeTo(shown, out, cfg.layout.skipLeading)
+                        sender.send(cfg, out) // repeated, so WLED stays in live mode
+                    }
+                    val busy = crossfade.active || effect
+                    delay(if (busy) maxOf(1L, 33L - (SystemClock.elapsedRealtime() - loopStart)) else 400L)
                     continue
                 }
                 if (wasPaused) {
@@ -372,6 +391,8 @@ class CaptureService : Service() {
                     inBlack = false
                     handover = false
                     snapNext = true
+                    mode = MODE_AMBIENT
+                    pendingFadeMs = cfg.standbyFadeMs
                     bars.reset()
                     last = loopStart
                     if (cfg.standbyAction == StandbyAction.OFF || cfg.standbyAction == StandbyAction.WLED || cfg.wledOnStart) {
@@ -449,8 +470,36 @@ class CaptureService : Service() {
                     blackSince = 0L
                     inBlack = false
                 }
+                // ---- every change between ambient light and black screen is faded ----
+                val modeNow = if (inBlack) MODE_BLACK else MODE_AMBIENT
+                if (haveFrame && modeNow != mode) {
+                    mode = modeNow
+                    crossfade.begin(shown, loopStart, cfg.blackFadeMs)
+                    snapNext = true
+                }
+                if (haveFrame && pendingFadeMs >= 0) {
+                    crossfade.begin(shown, loopStart, pendingFadeMs)
+                    pendingFadeMs = -1
+                    snapNext = true
+                }
+
+                // WLED takes over only after the picture faded to black, so the effect does not pop in.
                 if (inBlack && !wasBlack && cfg.blackAction == BlackAction.WLED) {
+                    if (cfg.blackFadeMs > 0) {
+                        pendingHandover = true
+                    } else {
+                        handover = true
+                        shown.fill(0f)
+                        val host = cfg.host
+                        val json = WledSender.handoverJson(cfg)
+                        thread { WledSender.postState(host, json) }
+                    }
+                }
+                if (!inBlack) pendingHandover = false
+                if (pendingHandover && !crossfade.active) {
+                    pendingHandover = false
                     handover = true
+                    shown.fill(0f)
                     val host = cfg.host
                     val json = WledSender.handoverJson(cfg)
                     thread { WledSender.postState(host, json) }
@@ -459,7 +508,6 @@ class CaptureService : Service() {
                     handover = false
                     snapNext = true
                 }
-                if (wasBlack && !inBlack) snapNext = true
 
                 // ---- decide the target colours ----
                 if (haveFrame) {
@@ -502,7 +550,7 @@ class CaptureService : Service() {
                                 cfg.blackBrightness / 100f,
                                 target,
                             )
-                            BlackAction.WLED -> Unit
+                            BlackAction.WLED -> if (pendingHandover) target.fill(0f)
                         }
                     }
                 }
@@ -516,8 +564,9 @@ class CaptureService : Service() {
                     }
                     processor.process(target, cfg, dt, tau, snapNext)
                     snapNext = false
+                    crossfade.apply(processor.cur, loopStart, shown)
                     java.util.Arrays.fill(out, 0.toByte())
-                    processor.writeTo(out, cfg.layout.skipLeading)
+                    processor.writeTo(shown, out, cfg.layout.skipLeading)
                     sender.send(cfg, out)
 
                     // WLED was unreachable and is back: make sure it is switched on again.
@@ -539,7 +588,7 @@ class CaptureService : Service() {
                     }
                     val buf = if (previewFlip) previewA else previewB
                     previewFlip = !previewFlip
-                    val cur = processor.cur
+                    val cur = shown
                     for (i in 0 until n) {
                         buf[i] = Color.rgb(
                             cur[i * 3].toInt().coerceIn(0, 255),
@@ -686,6 +735,9 @@ class CaptureService : Service() {
         const val EXTRA_DATA = "data"
         private const val NOTIF_ID = 1
         private const val MIN_ADAPTIVE_FPS = 12
+        private const val MODE_AMBIENT = 0
+        private const val MODE_BLACK = 1
+        private const val MODE_STANDBY = 2
         private val WIDTH_STEPS = intArrayOf(80, 120, 160, 240, 320)
     }
 }

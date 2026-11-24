@@ -174,14 +174,19 @@ class WledSender {
 
         /** Hands the strip over to WLED's own preset or effect while the screen is black. */
         fun handoverJson(cfg: Config): String =
-            handoverJson(cfg.wledPreset, cfg.wledFx, cfg.wledSx, cfg.wledIx, cfg.wledPal)
+            handoverJson(cfg.wledPreset, cfg.wledFx, cfg.wledSx, cfg.wledIx, cfg.wledPal, cfg.blackFadeMs)
 
-        /** Preset > 0 selects a WLED preset, otherwise effect fx with speed, intensity and palette. */
-        fun handoverJson(preset: Int, fx: Int, sx: Int, ix: Int, pal: Int): String =
-            if (preset > 0) {
-                """{"on":true,"lor":1,"ps":$preset}"""
+        /**
+         * Preset > 0 selects a WLED preset, otherwise effect fx with speed, intensity and palette.
+         * fadeMs > 0 asks WLED for a one-time transition ("tt", in units of 100 ms).
+         */
+        fun handoverJson(preset: Int, fx: Int, sx: Int, ix: Int, pal: Int, fadeMs: Int): String {
+            val tt = if (fadeMs > 0) ""","tt":${fadeMs / 100}""" else ""
+            return if (preset > 0) {
+                """{"on":true,"lor":1$tt,"ps":$preset}"""
             } else {
-                """{"on":true,"lor":1,"seg":[{"id":0,"fx":$fx,"sx":$sx,"ix":$ix,"pal":$pal}]}"""
+                """{"on":true,"lor":1$tt,"seg":[{"id":0,"fx":$fx,"sx":$sx,"ix":$ix,"pal":$pal}]}"""
             }
+        }
     }
 }

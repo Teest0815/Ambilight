@@ -15,7 +15,7 @@ import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import android.view.ViewGroup
-import android.widget.GridLayout
+import android.graphics.drawable.ColorDrawable
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -67,6 +67,7 @@ class MainActivity : AppCompatActivity() {
         for (page in PAGES) PreferenceManager.setDefaultValues(this, page.xml, false)
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
         setContentView(R.layout.activity_main)
+        window.setBackgroundDrawable(ColorDrawable(Color.parseColor("#121212")))
 
         preview = findViewById(R.id.preview)
         statusView = findViewById(R.id.status)
@@ -127,7 +128,7 @@ class MainActivity : AppCompatActivity() {
 
     /** One tile per settings page; each opens its own screen. */
     private fun buildTiles() {
-        val grid = findViewById<GridLayout>(R.id.tiles)
+        val grid = findViewById<ViewGroup>(R.id.tiles)
         val subtitleColor = Color.parseColor("#B5B5B5")
         for (page in PAGES) {
             val tile = layoutInflater.inflate(R.layout.item_tile, grid, false) as Button
@@ -141,14 +142,6 @@ class MainActivity : AppCompatActivity() {
             text.setSpan(ForegroundColorSpan(subtitleColor), start, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             text.setSpan(RelativeSizeSpan(0.85f), start, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             tile.text = text
-            tile.layoutParams = GridLayout.LayoutParams(
-                GridLayout.spec(GridLayout.UNDEFINED),
-                GridLayout.spec(GridLayout.UNDEFINED, 1f),
-            ).apply {
-                width = 0
-                height = ViewGroup.LayoutParams.WRAP_CONTENT
-                setMargins(6, 6, 6, 6)
-            }
             tile.setOnClickListener {
                 startActivity(
                     Intent(this, SettingsActivity::class.java)

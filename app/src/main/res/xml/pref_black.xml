@@ -10,6 +10,15 @@
         android:title="Was passiert bei schwarzem Bild?"
         app:useSimpleSummaryProvider="true" />
     <SeekBarPreference
+        android:defaultValue="800"
+        android:key="black_fade_ms"
+        android:max="3000"
+        android:summary="Weiches Ein- und Ausblenden zwischen Ambilight und schwarzem Bild, auch vor dem WLED-Effekt (0 = sofort)"
+        android:title="Übergang (ms)"
+        app:min="0"
+        app:seekBarIncrement="100"
+        app:showSeekBarValue="true" />
+    <SeekBarPreference
         android:defaultValue="1500"
         android:key="black_delay"
         android:max="10000"

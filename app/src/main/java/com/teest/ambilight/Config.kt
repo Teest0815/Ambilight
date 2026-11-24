@@ -66,6 +66,8 @@ data class Config(
     val standbySx: Int,
     val standbyIx: Int,
     val standbyPal: Int,
+    val blackFadeMs: Int,
+    val standbyFadeMs: Int,
     val pauseOnDream: Boolean,
 ) {
     companion object {
@@ -145,6 +147,8 @@ data class Config(
                 standbySx = p.num("standby_wled_sx", 128).coerceIn(0, 255),
                 standbyIx = p.num("standby_wled_ix", 128).coerceIn(0, 255),
                 standbyPal = p.num("standby_wled_pal", 0).coerceIn(0, 255),
+                blackFadeMs = p.num("black_fade_ms", 800).coerceIn(0, 5000),
+                standbyFadeMs = p.num("standby_fade_ms", 800).coerceIn(0, 5000),
                 pauseOnDream = p.bool("pause_on_dream", true),
             )
         }

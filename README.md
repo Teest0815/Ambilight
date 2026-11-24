@@ -4,7 +4,7 @@ Android-TV-App, die den Bildschirm aufnimmt und daraus ein Ambilight für einen 
 
 ## Bedienung
 
-Auf dem Startbildschirm siehst du links die Vorschau, den Status und die Knöpfe zum Starten und Testen. Rechts öffnet jede Kachel einen eigenen Einstellungsbereich: WLED-Verbindung, LED-Layout, Aufnahme, Farbe & Glättung, Schwarze Balken, Schwarzes Bild, Standby und System. Alles lässt sich mit der Fernbedienung bedienen, die fokussierte Kachel ist orange umrandet.
+Auf dem Startbildschirm siehst du links die Vorschau, den Status und die Knöpfe zum Starten und Testen. Rechts öffnet jede Kachel (eine pro Zeile, alle gleich hoch) einen eigenen Einstellungsbereich: WLED-Verbindung, LED-Layout, Aufnahme, Farbe & Glättung, Schwarze Balken, Schwarzes Bild, Standby und System. Alles lässt sich mit der Fernbedienung bedienen, die fokussierte Kachel ist orange umrandet.
 
 ## Funktionen
 
@@ -14,6 +14,7 @@ Auf dem Startbildschirm siehst du links die Vorschau, den Status und die Knöpfe
 - **Live-Vorschau** des Layouts mit Markierung der ersten LED und Layout-Test (laufender weißer Punkt) zum Prüfen von Reihenfolge und Richtung
 - **Schwarze Balken** werden automatisch erkannt (oben/unten und links/rechts) und ignoriert, mit einstellbarer Schwelle, Verzögerung, maximaler Balkenbreite und optional symmetrischer Erkennung (weniger Fehlerkennung in dunklen Szenen)
 - **Verhalten bei schwarzem Bild** (z. B. Netflix mit Kopierschutz): LEDs aus, letzte Farben halten, feste Farbe, Effekt der App (Atmen, Regenbogen, Farbwechsel, Komet, Funkeln) oder WLED übernimmt mit eigenem Preset bzw. Effekt (inkl. Geschwindigkeit, Intensität, Palette)
+- **Weiche Übergänge** zwischen Ambilight, schwarzem Bild und Standby (Dauer einstellbar, 0 = sofort). Bei „WLED übernimmt“ wird zuerst auf Schwarz überblendet und dann der WLED-Effekt gestartet (mit WLED-eigener Übergangszeit), beim Zurückwechseln blendet das Ambilight aus Schwarz ein
 - **Farbanpassung**: Durchschnitt oder kräftige Farben bevorzugen, Glättung, Helligkeit, Sättigung, Gamma, Weißabgleich (R/G/B)
 - **WLED automatisch finden** (mDNS und Netzwerk-Scan), Adresse und LED-Anzahl werden übernommen
 - **Standby** (Bildschirm aus, optional auch Bildschirmschoner): Das Ambilight pausiert, und du wählst, was dann passiert: WLED aus, WLED übernimmt mit eigenem Preset oder Effekt (inkl. Geschwindigkeit, Intensität, Palette), feste Farbe oder ein App-Effekt. Beim Aufwachen geht es automatisch weiter.
