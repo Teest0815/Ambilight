@@ -9,7 +9,6 @@ import android.graphics.Typeface
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
-import android.os.SystemClock
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -28,13 +27,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.PreferenceManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.math.max
 
 class MainActivity : AppCompatActivity() {
 
@@ -43,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var toggleButton: Button
     private lateinit var testButton: Button
     private lateinit var prefs: SharedPreferences
-    private var testJob: Job? = null
+    private var pendingTest: TestKind? = null
 
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
         updatePreviewLayout()
@@ -57,7 +50,10 @@ class MainActivity : AppCompatActivity() {
                     .putExtra(CaptureService.EXTRA_RESULT_CODE, result.resultCode)
                     .putExtra(CaptureService.EXTRA_DATA, data)
                 ContextCompat.startForegroundService(this, intent)
+                pendingTest?.let { launchTest(it, stopWhenDone = true) }
+                pendingTest = null
             } else {
+                pendingTest = null
                 Toast.makeText(this, "Ohne Berechtigung zur Bildschirmaufnahme geht es nicht", Toast.LENGTH_LONG).show()
             }
         }
@@ -83,10 +79,7 @@ class MainActivity : AppCompatActivity() {
         toggleButton.setOnClickListener {
             if (AmbilightState.running.value) stopCapture() else requestCapture()
         }
-        testButton.setOnClickListener {
-            val running = testJob
-            if (running != null && running.isActive) running.cancel() else showTestDialog()
-        }
+        testButton.setOnClickListener { showTestDialog() }
         buildTiles()
 
         lifecycleScope.launch {
@@ -173,10 +166,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestCapture() {
         if (Config.load(prefs).host.isEmpty()) {
+            pendingTest = null
             Toast.makeText(this, "Bitte zuerst die WLED-Adresse eingeben oder unter Einstellungen „WLED automatisch suchen“ drücken", Toast.LENGTH_LONG).show()
             return
         }
-        testJob?.cancel()
         val mpm = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         projectionLauncher.launch(mpm.createScreenCaptureIntent())
     }
@@ -185,161 +178,39 @@ class MainActivity : AppCompatActivity() {
         stopService(Intent(this, CaptureService::class.java))
     }
 
-    /** Lights the sides in different colours and runs a white dot along the strip, to check order and direction. */
-    private fun runLayoutTest() {
-        if (AmbilightState.running.value) {
-            Toast.makeText(this, "Bitte zuerst das Ambilight stoppen", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val cfg = Config.load(prefs)
-        if (cfg.host.isEmpty()) {
-            Toast.makeText(this, "Bitte zuerst die WLED-Adresse eingeben oder unter Einstellungen „WLED automatisch suchen“ drücken", Toast.LENGTH_LONG).show()
-            return
-        }
-        testJob?.cancel()
-        testJob = lifecycleScope.launch(Dispatchers.IO) {
-            val layout = LedLayout(cfg.layout)
-            if (layout.count == 0) return@launch
-            val sender = WledSender()
-            val out = ByteArray(layout.totalLeds * 3)
-            val colors = IntArray(layout.count)
-            try {
-                WledSender.postState(cfg.host, WledSender.onJson(true))
-                // Side colours: top red, right green, bottom blue, left yellow.
-                val base = IntArray(layout.count) { k ->
-                    val r = layout.regions[k]
-                    when {
-                        r.dotY < 0f -> Color.rgb(100, 0, 0)
-                        r.dotX > 1f -> Color.rgb(0, 100, 0)
-                        r.dotY > 1f -> Color.rgb(0, 0, 100)
-                        else -> Color.rgb(100, 100, 0)
-                    }
-                }
-                val stepDelay = max(15L, 4000L / layout.count)
-                for (head in 0 until layout.count) {
-                    for (k in 0 until layout.count) {
-                        colors[k] = when {
-                            k == head -> Color.WHITE
-                            k < head && head - k <= 3 -> Color.rgb(200, 200, 200)
-                            else -> base[k]
-                        }
-                    }
-                    writeColors(out, colors, cfg.layout.skipLeading)
-                    sender.send(cfg, out)
-                    AmbilightState.colors.value = colors.copyOf()
-                    delay(stepDelay)
-                }
-                for (k in 0 until layout.count) colors[k] = base[k]
-                writeColors(out, colors, cfg.layout.skipLeading)
-                repeat(30) {
-                    sender.send(cfg, out)
-                    delay(50)
-                }
-            } finally {
-                withContext(kotlinx.coroutines.NonCancellable) {
-                    java.util.Arrays.fill(out, 0.toByte())
-                    repeat(2) { sender.send(cfg, out) }
-                    sender.close()
-                    AmbilightState.colors.value = null
-                }
-            }
-        }
-        testJob?.let { watchTest(it) }
-    }
-
     private fun showTestDialog() {
         val items = arrayOf(
-            "Layout (laufender Punkt, Seitenfarben)",
+            "Layout (Farbränder und laufender Marker)",
             "Dimmen (Weiß, Rot, Grün, Blau)",
             "Farbsprünge (ruckartig wechselnde Farben)",
-            "RGB-Rad (Farbkreis um den Fernseher)",
+            "RGB-Rad (Farbkreis dreht sich)",
             "Alles nacheinander (Dimmen, Farbsprünge, RGB-Rad)",
         )
+        val kinds = arrayOf(TestKind.LAYOUT, TestKind.DIM, TestKind.JUMP, TestKind.WHEEL, TestKind.ALL)
         AlertDialog.Builder(this)
-            .setTitle("LEDs testen")
-            .setItems(items) { _, which ->
-                when (which) {
-                    0 -> runLayoutTest()
-                    1 -> runPatternTest(TestKind.DIM)
-                    2 -> runPatternTest(TestKind.JUMP)
-                    3 -> runPatternTest(TestKind.WHEEL)
-                    else -> runPatternTest(TestKind.ALL)
-                }
-            }
+            .setTitle("Test auf dem Bildschirm")
+            .setMessage("Das Testbild erscheint auf dem Fernseher und läuft durch die normale Bildschirmaufnahme. Beliebige Taste beendet den Test.")
+            .setItems(items) { _, which -> startTest(kinds[which]) }
             .setNegativeButton("Abbrechen", null)
             .show()
     }
 
-    /** The test button turns into a stop button while a test runs. */
-    private fun watchTest(job: Job) {
-        testButton.text = "Test stoppen"
-        job.invokeOnCompletion { runOnUiThread { testButton.text = "LEDs testen" } }
-    }
-
-    /** Dimming, abrupt colour changes and an RGB wheel on the whole strip, independent of the screen. */
-    private fun runPatternTest(kind: TestKind) {
+    /** The picture must really be captured, so the Ambilight has to run. If it does not, it is started for the test. */
+    private fun startTest(kind: TestKind) {
         if (AmbilightState.running.value) {
-            Toast.makeText(this, "Bitte zuerst das Ambilight stoppen", Toast.LENGTH_SHORT).show()
-            return
+            launchTest(kind, stopWhenDone = false)
+        } else {
+            pendingTest = kind
+            requestCapture() // after the permission dialog the service starts and the test opens
         }
-        val cfg = Config.load(prefs)
-        if (cfg.host.isEmpty()) {
-            Toast.makeText(this, "Bitte zuerst die WLED-Adresse eingeben oder unter Einstellungen „WLED automatisch suchen“ drücken", Toast.LENGTH_LONG).show()
-            return
-        }
-        testJob?.cancel()
-        testJob = lifecycleScope.launch(Dispatchers.IO) {
-            val layout = LedLayout(cfg.layout)
-            if (layout.count == 0) return@launch
-            val sender = WledSender()
-            val out = ByteArray(layout.totalLeds * 3)
-            val packed = IntArray(layout.count)
-            val colors = IntArray(layout.count)
-            val bri = cfg.brightness / 100f // the global brightness limit applies to the test too
-            try {
-                WledSender.postState(cfg.host, WledSender.onJson(true))
-                val start = SystemClock.elapsedRealtime()
-                val duration = TestPatterns.durationMs(kind)
-                while (isActive) {
-                    val t = SystemClock.elapsedRealtime() - start
-                    if (t >= duration) break
-                    TestPatterns.render(kind, t, layout.count, packed)
-                    for (k in colors.indices) {
-                        val c = packed[k]
-                        colors[k] = Color.rgb(
-                            (((c shr 16) and 0xFF) * bri + 0.5f).toInt(),
-                            (((c shr 8) and 0xFF) * bri + 0.5f).toInt(),
-                            ((c and 0xFF) * bri + 0.5f).toInt(),
-                        )
-                    }
-                    writeColors(out, colors, cfg.layout.skipLeading)
-                    sender.send(cfg, out)
-                    AmbilightState.colors.value = colors.copyOf()
-                    AmbilightState.status.value = "Test: ${TestPatterns.label(kind, t)}"
-                    delay(33)
-                }
-            } finally {
-                withContext(kotlinx.coroutines.NonCancellable) {
-                    java.util.Arrays.fill(out, 0.toByte())
-                    repeat(2) { sender.send(cfg, out) }
-                    sender.close()
-                    AmbilightState.colors.value = null
-                    AmbilightState.status.value = "Gestoppt"
-                }
-            }
-        }
-        testJob?.let { watchTest(it) }
     }
 
-    private fun writeColors(out: ByteArray, colors: IntArray, startPixel: Int) {
-        java.util.Arrays.fill(out, 0.toByte())
-        for (k in colors.indices) {
-            val d = (startPixel + k) * 3
-            if (d + 2 >= out.size) break
-            out[d] = Color.red(colors[k]).toByte()
-            out[d + 1] = Color.green(colors[k]).toByte()
-            out[d + 2] = Color.blue(colors[k]).toByte()
-        }
+    private fun launchTest(kind: TestKind, stopWhenDone: Boolean) {
+        startActivity(
+            Intent(this, TestActivity::class.java)
+                .putExtra(TestActivity.EXTRA_KIND, kind.name)
+                .putExtra(TestActivity.EXTRA_STOP_SERVICE, stopWhenDone),
+        )
     }
 
     private class Page(val title: String, val subtitle: String, val xml: Int)

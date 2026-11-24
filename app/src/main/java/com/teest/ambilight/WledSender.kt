@@ -170,7 +170,11 @@ class WledSender {
             }
         }
 
-        fun onJson(on: Boolean) = if (on) """{"on":true}""" else """{"on":false}"""
+        /**
+         * "lor":0 lifts a live-data override: after a hand-over ("lor":1) WLED ignores our packets for as long as
+         * they keep arriving, so it would stay on its own effect if the picture came back quickly.
+         */
+        fun onJson(on: Boolean) = if (on) """{"on":true,"lor":0}""" else """{"on":false}"""
 
         /** Hands the strip over to WLED's own preset or effect while the screen is black. */
         fun handoverJson(cfg: Config): String =

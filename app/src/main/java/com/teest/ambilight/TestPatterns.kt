@@ -1,12 +1,10 @@
 package com.teest.ambilight
 
-import kotlin.math.abs
-
-enum class TestKind { DIM, JUMP, WHEEL, ALL }
+enum class TestKind { LAYOUT, DIM, JUMP, WHEEL, ALL }
 
 /**
- * Test patterns for the LED strip, independent of the screen:
- * dimming (white and the three base colours fade up and down), colours that change abruptly, and an RGB wheel.
+ * Timing and colours of the test pictures that are drawn on the TV screen (see TestView).
+ * They are captured and processed by the normal Ambilight pipeline, so the whole chain is tested.
  * Colours are packed as 0xRRGGBB.
  */
 object TestPatterns {
@@ -20,54 +18,33 @@ object TestPatterns {
     private const val WHEEL_TURN_MS = 4000L
     private const val WHEEL_TURNS = 2
 
+    private const val LAYOUT_LAP_MS = 6000L
+    private const val LAYOUT_LAPS = 2
+
+    /** Time with a plain grey picture before the pattern starts, so the capture can settle. */
+    const val LEAD_IN_MS = 1500L
+
     private val SINGLE = listOf(TestKind.DIM, TestKind.JUMP, TestKind.WHEEL)
 
+    /** Length of the pattern itself (without lead-in). */
     fun durationMs(kind: TestKind): Long = when (kind) {
+        TestKind.LAYOUT -> LAYOUT_LAP_MS * LAYOUT_LAPS
         TestKind.DIM -> DIM_COLORS.size * DIM_STEP_MS
         TestKind.JUMP -> JUMP_COLORS.size * JUMP_STEP_MS * JUMP_ROUNDS
         TestKind.WHEEL -> WHEEL_TURN_MS * WHEEL_TURNS
         TestKind.ALL -> SINGLE.sumOf { durationMs(it) }
     }
 
-    /** Name of the part that runs at time tMs (for the status line). */
-    fun label(kind: TestKind, tMs: Long): String {
-        val (part, _) = resolve(kind, tMs)
-        return when (part) {
-            TestKind.DIM -> "Dimmen"
-            TestKind.JUMP -> "Farbsprünge"
-            else -> "RGB-Rad"
-        }
+    fun title(kind: TestKind): String = when (kind) {
+        TestKind.LAYOUT -> "Layout"
+        TestKind.DIM -> "Dimmen"
+        TestKind.JUMP -> "Farbsprünge"
+        TestKind.WHEEL -> "RGB-Rad"
+        TestKind.ALL -> "Alles nacheinander"
     }
 
-    /** Fills out[0 until n] with the colour of every LED at time tMs. */
-    fun render(kind: TestKind, tMs: Long, n: Int, out: IntArray) {
-        val (part, t) = resolve(kind, tMs)
-        when (part) {
-            TestKind.DIM -> {
-                val idx = ((t / DIM_STEP_MS) % DIM_COLORS.size).toInt()
-                val local = (t % DIM_STEP_MS).toFloat() / DIM_STEP_MS
-                val tri = if (local < 0.5f) local * 2f else (1f - local) * 2f
-                val level = tri * tri // squared: looks more even to the eye
-                val c = scale(DIM_COLORS[idx], level)
-                for (i in 0 until n) out[i] = c
-            }
-            TestKind.JUMP -> {
-                val idx = ((t / JUMP_STEP_MS) % JUMP_COLORS.size).toInt()
-                val c = JUMP_COLORS[idx]
-                for (i in 0 until n) out[i] = c
-            }
-            else -> {
-                val shift = (t % WHEEL_TURN_MS).toFloat() / WHEEL_TURN_MS
-                for (i in 0 until n) {
-                    val hue = (i.toFloat() / n + shift) % 1f
-                    out[i] = hsvToRgb(hue)
-                }
-            }
-        }
-    }
-
-    /** Which single pattern runs at tMs, and how far into it we are. */
-    private fun resolve(kind: TestKind, tMs: Long): Pair<TestKind, Long> {
+    /** Which single pattern runs at time tMs, and how far into it we are. */
+    fun resolve(kind: TestKind, tMs: Long): Pair<TestKind, Long> {
         if (kind != TestKind.ALL) return kind to tMs
         var rest = tMs
         for (part in SINGLE) {
@@ -78,19 +55,27 @@ object TestPatterns {
         return TestKind.WHEEL to durationMs(TestKind.WHEEL) - 1
     }
 
+    /** Colour of the whole screen for DIM and JUMP, t = time inside that pattern. */
+    fun fullScreenColor(part: TestKind, t: Long): Int = when (part) {
+        TestKind.DIM -> {
+            val idx = ((t / DIM_STEP_MS) % DIM_COLORS.size).toInt()
+            val local = (t % DIM_STEP_MS).toFloat() / DIM_STEP_MS
+            val tri = if (local < 0.5f) local * 2f else (1f - local) * 2f
+            scale(DIM_COLORS[idx], tri * tri) // squared: looks more even to the eye
+        }
+        else -> JUMP_COLORS[((t / JUMP_STEP_MS) % JUMP_COLORS.size).toInt()]
+    }
+
+    /** Rotation of the colour wheel as a fraction of a turn (0..1). */
+    fun wheelTurn(t: Long): Float = (t % WHEEL_TURN_MS).toFloat() / WHEEL_TURN_MS
+
+    /** Position of the running marker on the screen border, 0..1 clockwise from the top-left corner. */
+    fun layoutMarker(t: Long): Float = (t % LAYOUT_LAP_MS).toFloat() / LAYOUT_LAP_MS
+
     private fun scale(rgb: Int, f: Float): Int {
         val r = (((rgb shr 16) and 0xFF) * f + 0.5f).toInt()
         val g = (((rgb shr 8) and 0xFF) * f + 0.5f).toInt()
         val b = ((rgb and 0xFF) * f + 0.5f).toInt()
         return (r shl 16) or (g shl 8) or b
-    }
-
-    /** Hue 0..1 at full saturation and brightness. */
-    private fun hsvToRgb(h: Float): Int {
-        val x = h * 6f
-        val r = (abs(x - 3f) - 1f).coerceIn(0f, 1f)
-        val g = (2f - abs(x - 2f)).coerceIn(0f, 1f)
-        val b = (2f - abs(x - 4f)).coerceIn(0f, 1f)
-        return ((r * 255f + 0.5f).toInt() shl 16) or ((g * 255f + 0.5f).toInt() shl 8) or (b * 255f + 0.5f).toInt()
     }
 }

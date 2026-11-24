@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.Executors
-import kotlin.concurrent.thread
+import java.util.concurrent.RejectedExecutionException
 import kotlin.coroutines.coroutineContext
 import kotlin.math.min
 
@@ -86,6 +86,17 @@ class CaptureService : Service() {
     private val dispatcher = executor.asCoroutineDispatcher()
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private var loopJob: Job? = null
+
+    // WLED commands run one after the other in a fixed order, so e.g. "hand over" can never overtake "take back".
+    private val postExecutor = Executors.newSingleThreadExecutor()
+
+    private fun postAsync(host: String, json: String) {
+        try {
+            postExecutor.execute { WledSender.postState(host, json) }
+        } catch (e: RejectedExecutionException) {
+            // service is shutting down
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -277,7 +288,7 @@ class CaptureService : Service() {
 
         if (cfg.wledOnStart) {
             val host = cfg.host
-            thread { WledSender.postState(host, WledSender.onJson(true)) }
+            postAsync(host, WledSender.onJson(true))
         }
 
         try {
@@ -310,7 +321,7 @@ class CaptureService : Service() {
                         mode = MODE_STANDBY
                         if (cfg.standbyAction == StandbyAction.STATIC || cfg.standbyAction == StandbyAction.EFFECT) {
                             val host = cfg.host
-                            thread { WledSender.postState(host, WledSender.onJson(true)) }
+                            postAsync(host, WledSender.onJson(true))
                         }
                         AmbilightState.colors.value = null
                         AmbilightState.status.value = "Pausiert (Standby): " + when (cfg.standbyAction) {
@@ -364,14 +375,14 @@ class CaptureService : Service() {
                         if (cfg.standbyAction == StandbyAction.OFF) {
                             java.util.Arrays.fill(out, 0.toByte())
                             repeat(2) { sender.send(cfg, out) }
-                            thread { WledSender.postState(host, WledSender.onJson(false)) }
+                            postAsync(host, WledSender.onJson(false))
                         } else {
                             // WLED shows its own preset/effect as soon as our data stops.
                             val json = WledSender.handoverJson(
                                 cfg.standbyPreset, cfg.standbyFx, cfg.standbySx, cfg.standbyIx, cfg.standbyPal,
                                 cfg.standbyFadeMs,
                             )
-                            thread { WledSender.postState(host, json) }
+                            postAsync(host, json)
                         }
                     }
                     if (!(dark && standbyDone)) {
@@ -395,10 +406,8 @@ class CaptureService : Service() {
                     pendingFadeMs = cfg.standbyFadeMs
                     bars.reset()
                     last = loopStart
-                    if (cfg.standbyAction == StandbyAction.OFF || cfg.standbyAction == StandbyAction.WLED || cfg.wledOnStart) {
-                        val host = cfg.host
-                        thread { WledSender.postState(host, WledSender.onJson(true)) }
-                    }
+                    // switches WLED on and lifts a possible live override of an earlier hand-over
+                    postAsync(cfg.host, WledSender.onJson(true))
                     AmbilightState.status.value = "Warte auf Bild …"
                 }
 
@@ -492,7 +501,7 @@ class CaptureService : Service() {
                         shown.fill(0f)
                         val host = cfg.host
                         val json = WledSender.handoverJson(cfg)
-                        thread { WledSender.postState(host, json) }
+                        postAsync(host, json)
                     }
                 }
                 if (!inBlack) pendingHandover = false
@@ -502,11 +511,13 @@ class CaptureService : Service() {
                     shown.fill(0f)
                     val host = cfg.host
                     val json = WledSender.handoverJson(cfg)
-                    thread { WledSender.postState(host, json) }
+                    postAsync(host, json)
                 }
                 if (!inBlack && handover) {
                     handover = false
                     snapNext = true
+                    // Without this WLED keeps ignoring our packets and stays on its effect.
+                    postAsync(cfg.host, WledSender.onJson(true))
                 }
 
                 // ---- decide the target colours ----
@@ -573,7 +584,7 @@ class CaptureService : Service() {
                     val err = sender.error
                     if (prevError != null && err == null && cfg.wledOnStart) {
                         val host = cfg.host
-                        thread { WledSender.postState(host, WledSender.onJson(true)) }
+                        postAsync(host, WledSender.onJson(true))
                     }
                     prevError = err
                 }
@@ -635,7 +646,7 @@ class CaptureService : Service() {
                 }
                 if (cfg.wledOffStop) {
                     val host = cfg.host
-                    thread { WledSender.postState(host, WledSender.onJson(false)) }
+                    postAsync(host, WledSender.onJson(false))
                 }
             } catch (e: Exception) {
                 // ignore, we are shutting down
@@ -719,6 +730,7 @@ class CaptureService : Service() {
             runBlocking { withTimeoutOrNull(1000) { job.join() } }
         }
         release()
+        postExecutor.shutdown() // queued WLED commands still finish
         scope.cancel()
         dispatcher.close()
         AmbilightState.running.value = false
