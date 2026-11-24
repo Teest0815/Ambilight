@@ -11,7 +11,7 @@ import androidx.preference.PreferenceFragmentCompat
 class SettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.preferences, rootKey)
+        setPreferencesFromResource(requireArguments().getInt(ARG_XML), rootKey)
 
         val numeric = listOf(
             "leds_top", "leds_right", "leds_bottom", "leds_left",
@@ -138,5 +138,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }
             }
         }.start()
+    }
+
+    companion object {
+        private const val ARG_XML = "xml"
+
+        fun newInstance(xmlRes: Int) = SettingsFragment().apply {
+            arguments = Bundle().apply { putInt(ARG_XML, xmlRes) }
+        }
     }
 }

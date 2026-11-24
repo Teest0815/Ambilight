@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="bar_detect"
+        android:summary="Schwarze Ränder oben/unten und links/rechts werden ignoriert"
+        android:title="Balken automatisch erkennen" />
+    <SeekBarPreference
+        android:defaultValue="20"
+        android:key="bar_threshold"
+        android:max="60"
+        android:title="Schwarzschwelle (Helligkeit 0–255)"
+        app:min="1"
+        app:showSeekBarValue="true" />
+    <SeekBarPreference
+        android:defaultValue="1000"
+        android:key="bar_delay"
+        android:max="5000"
+        android:title="Verzögerung bis zur Übernahme (ms)"
+        app:min="200"
+        app:seekBarIncrement="100"
+        app:showSeekBarValue="true" />
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="bar_symmetric"
+        android:summary="Balken müssen auf beiden Seiten gleich breit sein. Das verhindert Fehlerkennung in dunklen Szenen."
+        android:title="Symmetrische Balken" />
+    <SeekBarPreference
+        android:defaultValue="35"
+        android:key="bar_max"
+        android:max="45"
+        android:title="Maximale Balkenbreite pro Seite (%)"
+        app:min="10"
+        app:showSeekBarValue="true" />
+
+</PreferenceScreen>

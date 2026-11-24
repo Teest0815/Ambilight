@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <Preference
+        android:key="find_wled"
+        android:summary="Sucht WLED-Geräte im WLAN (mDNS und Netzwerk-Scan) und übernimmt Adresse und LED-Anzahl"
+        android:title="WLED automatisch suchen" />
+    <EditTextPreference
+        android:defaultValue=""
+        android:dialogTitle="IP-Adresse oder Hostname von WLED"
+        android:key="host"
+        android:title="WLED-Adresse"
+        app:useSimpleSummaryProvider="true" />
+    <ListPreference
+        android:defaultValue="ddp"
+        android:entries="@array/protocol_entries"
+        android:entryValues="@array/protocol_values"
+        android:key="protocol"
+        android:title="Protokoll"
+        app:useSimpleSummaryProvider="true" />
+    <Preference
+        android:key="read_led_count"
+        android:summary="Verbindung testen und die LED-Anzahl aus WLED als Gesamtzahl übernehmen"
+        android:title="WLED abfragen" />
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="wled_on_start"
+        android:summary="Sendet beim Start „An“ an WLED"
+        android:title="WLED beim Start einschalten" />
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="wled_off_stop"
+        android:summary="Sonst kehrt WLED nach dem Stopp zu seinem normalen Zustand zurück"
+        android:title="WLED beim Beenden ausschalten" />
+
+</PreferenceScreen>

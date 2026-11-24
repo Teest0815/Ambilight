@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SeekBarPreference
+        android:defaultValue="150"
+        android:key="smoothing"
+        android:max="1000"
+        android:title="Glättung (ms)"
+        app:seekBarIncrement="10"
+        app:showSeekBarValue="true" />
+    <SeekBarPreference
+        android:defaultValue="100"
+        android:key="brightness"
+        android:max="100"
+        android:title="Helligkeit (%)"
+        app:showSeekBarValue="true" />
+    <SeekBarPreference
+        android:defaultValue="100"
+        android:key="saturation"
+        android:max="300"
+        android:title="Sättigung (%)"
+        app:seekBarIncrement="5"
+        app:showSeekBarValue="true" />
+    <ListPreference
+        android:defaultValue="1.0"
+        android:entries="@array/gamma_entries"
+        android:entryValues="@array/gamma_values"
+        android:key="gamma"
+        android:title="Gamma"
+        app:useSimpleSummaryProvider="true" />
+    <SeekBarPreference
+        android:defaultValue="100"
+        android:key="gain_r"
+        android:max="100"
+        android:title="Weißabgleich Rot (%)"
+        app:min="20"
+        app:showSeekBarValue="true" />
+    <SeekBarPreference
+        android:defaultValue="100"
+        android:key="gain_g"
+        android:max="100"
+        android:title="Weißabgleich Grün (%)"
+        app:min="20"
+        app:showSeekBarValue="true" />
+    <SeekBarPreference
+        android:defaultValue="100"
+        android:key="gain_b"
+        android:max="100"
+        android:title="Weißabgleich Blau (%)"
+        app:min="20"
+        app:showSeekBarValue="true" />
+
+</PreferenceScreen>

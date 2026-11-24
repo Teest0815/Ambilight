@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <EditTextPreference
+        android:defaultValue="30"
+        android:dialogTitle="Anzahl LEDs oben"
+        android:key="leds_top"
+        android:title="LEDs oben"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:defaultValue="17"
+        android:dialogTitle="Anzahl LEDs rechts"
+        android:key="leds_right"
+        android:title="LEDs rechts"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:defaultValue="30"
+        android:dialogTitle="Anzahl LEDs unten"
+        android:key="leds_bottom"
+        android:title="LEDs unten"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:defaultValue="17"
+        android:dialogTitle="Anzahl LEDs links"
+        android:key="leds_left"
+        android:title="LEDs links"
+        app:useSimpleSummaryProvider="true" />
+    <ListPreference
+        android:defaultValue="bottom_left"
+        android:entries="@array/corner_entries"
+        android:entryValues="@array/corner_values"
+        android:key="start_corner"
+        android:title="Start des Streifens (erste LED)"
+        app:useSimpleSummaryProvider="true" />
+    <ListPreference
+        android:defaultValue="clockwise"
+        android:entries="@array/direction_entries"
+        android:entryValues="@array/direction_values"
+        android:key="direction"
+        android:title="Laufrichtung"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:defaultValue="0"
+        android:dialogMessage="Verschiebt das Layout um diese Anzahl LEDs (auch negativ), z. B. wenn der Streifen in der Mitte einer Seite beginnt."
+        android:dialogTitle="LED-Versatz"
+        android:key="led_offset"
+        android:title="LED-Versatz"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:defaultValue="0"
+        android:dialogMessage="LEDs am Anfang des Streifens, die nicht hinter dem Fernseher liegen (z. B. Kabelweg). Sie bleiben dunkel."
+        android:dialogTitle="LEDs am Anfang überspringen"
+        android:key="skip_leading"
+        android:title="LEDs am Anfang überspringen"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:defaultValue="0"
+        android:dialogMessage="0 = automatisch (Summe aller Seiten plus übersprungene LEDs)."
+        android:dialogTitle="Gesamtzahl LEDs im Streifen"
+        android:key="total_leds"
+        android:title="Gesamtzahl LEDs im Streifen"
+        app:useSimpleSummaryProvider="true" />
+    <SeekBarPreference
+        android:defaultValue="12"
+        android:key="depth"
+        android:max="40"
+        android:title="Messtiefe am Bildrand (%)"
+        app:min="3"
+        app:showSeekBarValue="true" />
+
+</PreferenceScreen>

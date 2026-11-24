@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SeekBarPreference
+        android:defaultValue="30"
+        android:key="fps"
+        android:max="60"
+        android:title="Aufnahmefrequenz (Bilder pro Sekunde)"
+        app:min="5"
+        app:showSeekBarValue="true" />
+    <ListPreference
+        android:defaultValue="160"
+        android:entries="@array/capture_width_entries"
+        android:entryValues="@array/capture_width_values"
+        android:key="capture_width"
+        android:title="Aufnahmeauflösung"
+        app:useSimpleSummaryProvider="true" />
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="adaptive"
+        android:summary="Senkt Bildrate und Auflösung automatisch, wenn das Gerät nicht mitkommt"
+        android:title="Leistung automatisch anpassen" />
+    <ListPreference
+        android:defaultValue="average"
+        android:entries="@array/color_mode_entries"
+        android:entryValues="@array/color_mode_values"
+        android:key="color_mode"
+        android:title="Farbberechnung"
+        app:useSimpleSummaryProvider="true" />
+
+</PreferenceScreen>

@@ -5,9 +5,17 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Typeface
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
+import android.view.ViewGroup
+import android.widget.GridLayout
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -56,7 +64,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
+        for (page in PAGES) PreferenceManager.setDefaultValues(this, page.xml, false)
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
         setContentView(R.layout.activity_main)
 
@@ -72,6 +80,7 @@ class MainActivity : AppCompatActivity() {
             if (AmbilightState.running.value) stopCapture() else requestCapture()
         }
         testButton.setOnClickListener { runLayoutTest() }
+        buildTiles()
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -103,6 +112,7 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         AmbilightState.previewVisible = true
+        updatePreviewLayout() // settings pages may have changed the layout
     }
 
     override fun onStop() {
@@ -113,6 +123,41 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
         super.onDestroy()
+    }
+
+    /** One tile per settings page; each opens its own screen. */
+    private fun buildTiles() {
+        val grid = findViewById<GridLayout>(R.id.tiles)
+        val subtitleColor = Color.parseColor("#B5B5B5")
+        for (page in PAGES) {
+            val tile = layoutInflater.inflate(R.layout.item_tile, grid, false) as Button
+            val text = SpannableStringBuilder()
+            text.append(page.title)
+            text.setSpan(StyleSpan(Typeface.BOLD), 0, page.title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            text.setSpan(RelativeSizeSpan(1.25f), 0, page.title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            text.append("\n")
+            val start = text.length
+            text.append(page.subtitle)
+            text.setSpan(ForegroundColorSpan(subtitleColor), start, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            text.setSpan(RelativeSizeSpan(0.85f), start, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            tile.text = text
+            tile.layoutParams = GridLayout.LayoutParams(
+                GridLayout.spec(GridLayout.UNDEFINED),
+                GridLayout.spec(GridLayout.UNDEFINED, 1f),
+            ).apply {
+                width = 0
+                height = ViewGroup.LayoutParams.WRAP_CONTENT
+                setMargins(6, 6, 6, 6)
+            }
+            tile.setOnClickListener {
+                startActivity(
+                    Intent(this, SettingsActivity::class.java)
+                        .putExtra(SettingsActivity.EXTRA_TITLE, page.title)
+                        .putExtra(SettingsActivity.EXTRA_XML, page.xml),
+                )
+            }
+            grid.addView(tile)
+        }
     }
 
     private fun handleAutostart(intent: Intent?) {
@@ -213,7 +258,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private class Page(val title: String, val subtitle: String, val xml: Int)
+
     companion object {
         const val EXTRA_AUTOSTART = "autostart"
+
+        private val PAGES = listOf(
+            Page("WLED-Verbindung", "Adresse, automatische Suche, Protokoll", R.xml.pref_connection),
+            Page("LED-Layout", "LEDs pro Seite, Startecke, Richtung", R.xml.pref_layout),
+            Page("Aufnahme", "Bildrate, Auflösung, Farbberechnung", R.xml.pref_capture),
+            Page("Farbe & Glättung", "Helligkeit, Sättigung, Gamma, Weißabgleich", R.xml.pref_color),
+            Page("Schwarze Balken", "Automatische Erkennung bei Filmen", R.xml.pref_bars),
+            Page("Schwarzes Bild", "Was passiert z. B. bei Netflix?", R.xml.pref_black),
+            Page("Standby", "Was passiert bei Bildschirm aus?", R.xml.pref_standby),
+            Page("System", "Start mit dem Fernseher", R.xml.pref_system),
+        )
     }
 }

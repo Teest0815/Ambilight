@@ -2,6 +2,10 @@
 
 Android-TV-App, die den Bildschirm aufnimmt und daraus ein Ambilight für einen WLED-LED-Streifen hinter dem Fernseher berechnet.
 
+## Bedienung
+
+Auf dem Startbildschirm siehst du links die Vorschau, den Status und die Knöpfe zum Starten und Testen. Rechts öffnet jede Kachel einen eigenen Einstellungsbereich: WLED-Verbindung, LED-Layout, Aufnahme, Farbe & Glättung, Schwarze Balken, Schwarzes Bild, Standby und System. Alles lässt sich mit der Fernbedienung bedienen, die fokussierte Kachel ist orange umrandet.
+
 ## Funktionen
 
 - **Aufnahme** per MediaProjection in niedriger Auflösung (80 bis 320 px), Aufnahmefrequenz einstellbar (5 bis 60 FPS)
@@ -20,8 +24,8 @@ Android-TV-App, die den Bildschirm aufnimmt und daraus ein Ambilight für einen 
 ## Einrichtung
 
 1. APK installieren (siehe unten) und App öffnen.
-2. „WLED automatisch suchen“ drücken und das Gerät auswählen (oder die WLED-Adresse von Hand eintragen).
-3. LED-Anzahl pro Seite, Startecke und Laufrichtung einstellen. Mit „LED-Layout testen“ prüfen: Oben leuchtet rot, rechts grün, unten blau, links gelb, und ein weißer Punkt läuft vom ersten bis zum letzten LED.
+2. Kachel **WLED-Verbindung** öffnen, „WLED automatisch suchen“ drücken und das Gerät auswählen (oder die WLED-Adresse von Hand eintragen).
+3. Kachel **LED-Layout** öffnen und LED-Anzahl pro Seite, Startecke und Laufrichtung einstellen. Zurück auf dem Startbildschirm: Mit „LED-Layout testen“ prüfen: Oben leuchtet rot, rechts grün, unten blau, links gelb, und ein weißer Punkt läuft vom ersten bis zum letzten LED.
 4. „Ambilight starten“ und die Berechtigung zur Bildschirmaufnahme bestätigen.
 
 ## APK bauen

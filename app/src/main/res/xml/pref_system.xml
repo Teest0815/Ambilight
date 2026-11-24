@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
+        android:key="auto_start"
+        android:summary="Öffnet die App nach dem Einschalten des Fernsehers und fragt die Aufnahme-Berechtigung ab. Funktioniert nicht auf jedem Gerät."
+        android:title="Beim Start des Fernsehers starten" />
+
+</PreferenceScreen>

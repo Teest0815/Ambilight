@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ListPreference
+        android:defaultValue="off"
+        android:entries="@array/black_action_entries"
+        android:entryValues="@array/black_action_values"
+        android:key="black_action"
+        android:title="Was passiert bei schwarzem Bild?"
+        app:useSimpleSummaryProvider="true" />
+    <SeekBarPreference
+        android:defaultValue="1500"
+        android:key="black_delay"
+        android:max="10000"
+        android:title="Verzögerung bis zur Umschaltung (ms)"
+        app:min="250"
+        app:seekBarIncrement="250"
+        app:showSeekBarValue="true" />
+    <SeekBarPreference
+        android:defaultValue="4"
+        android:key="black_threshold"
+        android:max="30"
+        android:title="Schwelle für „schwarz“ (mittlere Helligkeit)"
+        app:min="1"
+        app:showSeekBarValue="true" />
+    <EditTextPreference
+        android:defaultValue="#FF6A00"
+        android:dialogMessage="Farbe als Hexwert, z. B. #FF6A00. Gilt für „Feste Farbe“, Atmen, Komet und Funkeln."
+        android:dialogTitle="Farbe"
+        android:key="black_color"
+        android:title="Farbe"
+        app:useSimpleSummaryProvider="true" />
+    <SeekBarPreference
+        android:defaultValue="50"
+        android:key="black_brightness"
+        android:max="100"
+        android:title="Helligkeit bei schwarzem Bild (%)"
+        app:min="1"
+        app:showSeekBarValue="true" />
+    <ListPreference
+        android:defaultValue="breathing"
+        android:entries="@array/effect_entries"
+        android:entryValues="@array/effect_values"
+        android:key="black_effect"
+        android:title="Effekt der App"
+        app:useSimpleSummaryProvider="true" />
+    <SeekBarPreference
+        android:defaultValue="40"
+        android:key="effect_speed"
+        android:max="100"
+        android:title="Effektgeschwindigkeit (App-Effekte)"
+        app:min="1"
+        app:showSeekBarValue="true" />
+    <EditTextPreference
+        android:defaultValue="0"
+        android:dialogMessage="Nummer des WLED-Presets. 0 = kein Preset, dann wird der Effekt unten verwendet."
+        android:dialogTitle="WLED-Preset"
+        android:key="wled_preset"
+        android:title="WLED: Preset-Nummer"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:defaultValue="0"
+        android:dialogMessage="Effekt-ID wie in WLED (0 = Solid, 2 = Breathe, 9 = Rainbow …). Wird nur ohne Preset genutzt."
+        android:dialogTitle="WLED-Effekt"
+        android:key="wled_fx"
+        android:title="WLED: Effekt-ID"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:defaultValue="128"
+        android:dialogTitle="Effektgeschwindigkeit in WLED (0–255)"
+        android:key="wled_sx"
+        android:title="WLED: Geschwindigkeit"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:defaultValue="128"
+        android:dialogTitle="Effektintensität in WLED (0–255)"
+        android:key="wled_ix"
+        android:title="WLED: Intensität"
+        app:useSimpleSummaryProvider="true" />
+    <EditTextPreference
+        android:defaultValue="0"
+        android:dialogTitle="Palette in WLED (ID)"
+        android:key="wled_pal"
+        android:title="WLED: Palette"
+        app:useSimpleSummaryProvider="true" />
+
+</PreferenceScreen>
