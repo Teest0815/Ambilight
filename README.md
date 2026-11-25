@@ -35,7 +35,7 @@ Auf dem Startbildschirm siehst du links die Vorschau, den Status und die Knöpfe
 
 Bei jedem Push baut GitHub Actions eine signierte Release-APK (`.github/workflows/build.yml`). Sie liegt danach unter **Actions → letzter Lauf → Artifacts → Ambilight-apk** (als ZIP, darin `app-release.apk`).
 
-Die APK wird immer mit demselben Schlüssel (`app/ambilight-release.jks`) signiert. Neue Versionen lassen sich deshalb direkt über die alte installieren, Einstellungen bleiben erhalten. Der Schlüssel liegt im privaten Repository. Wird das Repo öffentlich, bitte einen neuen Schlüssel erzeugen und die Passwörter als GitHub-Secrets hinterlegen.
+Die APK wird immer mit demselben Schlüssel signiert. Neue Versionen lassen sich deshalb direkt über die alte installieren, Einstellungen bleiben erhalten. Der Schlüssel liegt nicht im Repository, sondern als GitHub-Secrets (Settings → Secrets and variables → Actions): `KEYSTORE_BASE64` (die Keystore-Datei als Base64, `base64 -w0 ambilight-release.jks`) und `KEY_PASSWORD` (Passwort für Keystore und Schlüssel, Alias `ambilight`). Ohne diese Secrets baut die CI nur eine Debug-signierte APK und veröffentlicht kein Release. Den Schlüssel bitte sichern: geht er verloren, kann die App nicht mehr aktualisiert werden.
 
 ## Bekannte Grenzen
 
@@ -58,4 +58,4 @@ allererste Installation dieser Version nötig.
 - Ist das Repository **privat**, braucht die App ein GitHub-Token (Fine-grained, nur Lesezugriff auf „Contents“),
   einzutragen unter App-Update → GitHub-Token.
 - Android fragt in der Regel nach einer Bestätigung; ab Android 12 kann sie bei Updates entfallen.
-- Updates klappen nur, weil jede Version mit demselben Schlüssel signiert ist (`app/ambilight-release.jks`).
+- Updates klappen nur, weil jede Version mit demselben Schlüssel signiert ist.

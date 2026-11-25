@@ -21,14 +21,20 @@ android {
     }
 
     // Fester Schlüssel, damit neue Versionen über die alte installiert werden können.
-    // Der Schlüssel liegt im (privaten) Repository. Wird das Repo öffentlich, bitte einen neuen
-    // Schlüssel erzeugen und die Passwörter als GitHub-Secrets hinterlegen.
-    signingConfigs {
-        create("release") {
-            storeFile = file("ambilight-release.jks")
-            storePassword = "ambilight-release"
-            keyAlias = "ambilight"
-            keyPassword = "ambilight-release"
+    // Er liegt NICHT im Repository: Die CI schreibt ihn aus dem GitHub-Secret KEYSTORE_BASE64 nach
+    // app/release.jks und liest das Passwort aus KEY_PASSWORD. Ohne Schlüssel (z. B. lokal oder in
+    // einem Fork) wird mit dem Android-Debug-Schlüssel signiert.
+    val keystore = file("release.jks")
+    val signPw = System.getenv("KEY_PASSWORD")
+    val haveKey = keystore.exists() && !signPw.isNullOrEmpty()
+    if (haveKey) {
+        signingConfigs {
+            create("release") {
+                storeFile = keystore
+                storePassword = signPw
+                keyAlias = "ambilight"
+                keyPassword = signPw
+            }
         }
     }
 
@@ -37,10 +43,10 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("release")
+            if (haveKey) signingConfig = signingConfigs.getByName("release")
         }
         debug {
-            signingConfig = signingConfigs.getByName("release")
+            if (haveKey) signingConfig = signingConfigs.getByName("release")
         }
     }
 

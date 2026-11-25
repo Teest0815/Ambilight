@@ -8,3 +8,7 @@ captures/
 .externalNativeBuild/
 .cxx/
 *.apk
+
+app/release.jks
+*.jks
+*.keystore
