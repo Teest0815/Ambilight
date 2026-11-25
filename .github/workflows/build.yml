@@ -51,7 +51,7 @@ jobs:
 
       # Der Dateiname enthält die Nummer, die App liest sie daraus (code<Nummer>).
       - name: APK benennen
-        run: cp app/build/outputs/apk/release/app-release.apk "Ambilight-${VERSION_NAME}-code${VERSION_CODE}.apk"
+        run: cp "$(ls app/build/outputs/apk/release/*.apk | head -1)" "Ambilight-${VERSION_NAME}-code${VERSION_CODE}.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
