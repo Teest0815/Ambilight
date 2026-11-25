@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <Preference
+        android:key="update_version"
+        android:selectable="false"
+        android:title="Installierte Version" />
+
+    <Preference
+        android:key="update_check"
+        android:summary="Sucht auf GitHub nach einer neueren Version und installiert sie auf Wunsch."
+        android:title="Jetzt nach Updates suchen" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="update_auto"
+        android:summary="Prüft beim Öffnen der App, ob es eine neue Version gibt, und zeigt einen Hinweis."
+        android:title="Automatisch suchen" />
+
+    <EditTextPreference
+        android:key="update_token"
+        android:summary="Nur nötig, wenn das Repository privat ist: GitHub-Token mit Lesezugriff auf „Contents“ (Fine-grained Token)."
+        android:title="GitHub-Token"
+        app:useSimpleSummaryProvider="false" />
+
+    <EditTextPreference
+        android:defaultValue="Teest0815/Ambilight"
+        android:key="update_repo"
+        android:summary="Repository, aus dem die Updates kommen (Benutzer/Name)."
+        android:title="Repository"
+        app:useSimpleSummaryProvider="true" />
+
+</PreferenceScreen>

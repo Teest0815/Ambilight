@@ -3,6 +3,11 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// Die CI übergibt bei jedem Build eine neue Nummer (-PappVersionCode, -PappVersionName),
+// lokal gilt der Standard.
+val appVersionCode = (project.findProperty("appVersionCode") as String?)?.toIntOrNull() ?: 2
+val appVersionName = (project.findProperty("appVersionName") as String?) ?: "1.3.0-dev"
+
 android {
     namespace = "com.teest.ambilight"
     compileSdk = 34
@@ -11,8 +16,8 @@ android {
         applicationId = "com.teest.ambilight"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
 
     // Fester Schlüssel, damit neue Versionen über die alte installiert werden können.

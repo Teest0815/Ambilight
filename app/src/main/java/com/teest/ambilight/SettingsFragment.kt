@@ -53,6 +53,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
             readLedCount()
             true
         }
+        findPreference<EditTextPreference>("update_token")?.setOnBindEditTextListener { edit ->
+            edit.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            edit.setSingleLine()
+            edit.setSelection(edit.text.length)
+        }
+        findPreference<Preference>("update_version")?.let {
+            val (name, code) = UpdateManager.installed(requireContext())
+            it.summary = "$name (Build $code)"
+        }
+        findPreference<Preference>("update_check")?.setOnPreferenceClickListener {
+            (activity as? androidx.appcompat.app.AppCompatActivity)?.checkForUpdate(manual = true)
+            true
+        }
         findPreference<Preference>("find_wled")?.setOnPreferenceClickListener {
             findWled()
             true

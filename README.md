@@ -44,3 +44,18 @@ Die APK wird immer mit demselben Schlüssel (`app/ambilight-release.jks`) signie
 - Im Standby läuft „WLED übernimmt“ am zuverlässigsten, weil WLED den Effekt selbst abspielt. Feste Farbe und App-Effekt brauchen, dass die App im Standby weiterläuft, was nicht jeder Fernseher erlaubt.
 - Die Berechtigung zur Bildschirmaufnahme muss nach jedem Start bestätigt werden. „Beim Start des Fernsehers starten“ öffnet nur die App und zeigt diese Abfrage, manche Geräte blockieren das.
 - Der Code ist bisher nicht auf einem echten Fernseher getestet.
+
+## Updates in der App
+
+Jeder Build auf `main` veröffentlicht ein eigenes GitHub-Release (`v1.3.<Build>`) mit der APK
+`Ambilight-<Version>-code<Nummer>.apk` und einer Änderungsliste aus den Commits.
+
+Die App sucht beim Öffnen (abschaltbar) und unter **App-Update → Jetzt nach Updates suchen** nach einer neueren
+Version, zeigt die Änderungen, lädt die APK und startet die Android-Installation. Ein USB-Stick ist nur für die
+allererste Installation dieser Version nötig.
+
+- Beim ersten Mal muss Android „Unbekannte Apps installieren“ für Ambilight erlauben (die App öffnet die Einstellung).
+- Ist das Repository **privat**, braucht die App ein GitHub-Token (Fine-grained, nur Lesezugriff auf „Contents“),
+  einzutragen unter App-Update → GitHub-Token.
+- Android fragt in der Regel nach einer Bestätigung; ab Android 12 kann sie bei Updates entfallen.
+- Updates klappen nur, weil jede Version mit demselben Schlüssel signiert ist (`app/ambilight-release.jks`).
