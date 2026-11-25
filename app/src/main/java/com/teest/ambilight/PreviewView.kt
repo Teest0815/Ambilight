@@ -3,6 +3,7 @@ package com.teest.ambilight
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import androidx.core.content.ContextCompat
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
@@ -19,7 +20,8 @@ class PreviewView @JvmOverloads constructor(
     private var layoutModel: LedLayout? = null
     private var colors: IntArray? = null
 
-    private val screenPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#26262C") }
+    private val screenPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ContextCompat.getColor(context, R.color.screen) }
+    private val ledOff = ContextCompat.getColor(context, R.color.led_off)
     private val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
@@ -66,7 +68,7 @@ class PreviewView @JvmOverloads constructor(
             val r = model.regions[k]
             val cx = left + r.dotX * tvW
             val cy = top + r.dotY * tvH
-            dotPaint.color = live?.getOrNull(k) ?: Color.parseColor("#55555C")
+            dotPaint.color = live?.getOrNull(k) ?: ledOff
             canvas.drawCircle(cx, cy, radius, dotPaint)
             if (k == 0) canvas.drawCircle(cx, cy, radius + 4f, ringPaint)
         }

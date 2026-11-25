@@ -1,6 +1,6 @@
 package com.teest.ambilight
 
-import android.graphics.Color
+import androidx.core.content.ContextCompat
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.widget.Button
@@ -13,7 +13,7 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
-        window.setBackgroundDrawable(ColorDrawable(Color.parseColor("#121212")))
+        window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, R.color.bg)))
         val xml = intent.getIntExtra(EXTRA_XML, 0)
         if (xml == 0) {
             finish()

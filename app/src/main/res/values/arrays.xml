@@ -112,4 +112,15 @@
         <item>static</item>
         <item>effect</item>
     </string-array>
+
+    <string-array name="theme_entries">
+        <item>Dunkel</item>
+        <item>Hell</item>
+        <item>Wie das System</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>dark</item>
+        <item>light</item>
+        <item>system</item>
+    </string-array>
 </resources>

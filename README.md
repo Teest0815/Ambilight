@@ -50,12 +50,12 @@ Die APK wird immer mit demselben Schlüssel signiert. Neue Versionen lassen sich
 Jeder Build auf `main` veröffentlicht ein eigenes GitHub-Release (`v1.3.<Build>`) mit der APK
 `Ambilight-<Version>-code<Nummer>.apk` und einer Änderungsliste aus den Commits.
 
-Die App sucht beim Öffnen (abschaltbar) und unter **App-Update → Jetzt nach Updates suchen** nach einer neueren
+Die App sucht beim Öffnen (abschaltbar) und unter **App → Jetzt nach Updates suchen** nach einer neueren
 Version, zeigt die Änderungen, lädt die APK und startet die Android-Installation. Ein USB-Stick ist nur für die
 allererste Installation dieser Version nötig.
 
 - Beim ersten Mal muss Android „Unbekannte Apps installieren“ für Ambilight erlauben (die App öffnet die Einstellung).
 - Ist das Repository **privat**, braucht die App ein GitHub-Token (Fine-grained, nur Lesezugriff auf „Contents“),
-  einzutragen unter App-Update → GitHub-Token.
+  einzutragen unter App → GitHub-Token.
 - Android fragt in der Regel nach einer Bestätigung; ab Android 12 kann sie bei Updates entfallen.
 - Updates klappen nur, weil jede Version mit demselben Schlüssel signiert ist.

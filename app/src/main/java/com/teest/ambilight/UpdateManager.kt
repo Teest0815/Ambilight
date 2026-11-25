@@ -92,7 +92,7 @@ object UpdateManager {
                     }
                     404 -> CheckResult.Failed(
                         if (token.isEmpty()) {
-                            "Kein Zugriff auf $repo. Ist das Repository (noch) privat, trage unter „App-Update“ ein GitHub-Token ein."
+                            "Kein Zugriff auf $repo. Ist das Repository (noch) privat, trage unter „App“ ein GitHub-Token ein."
                         } else {
                             "Kein Release gefunden. Wurde schon eines veröffentlicht? Sonst Repository und Token prüfen."
                         },

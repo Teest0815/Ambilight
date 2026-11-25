@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         for (page in PAGES) PreferenceManager.setDefaultValues(this, page.xml, false)
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
         setContentView(R.layout.activity_main)
-        window.setBackgroundDrawable(ColorDrawable(Color.parseColor("#121212")))
+        window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, R.color.bg)))
 
         preview = findViewById(R.id.preview)
         statusView = findViewById(R.id.status)
@@ -174,7 +174,7 @@ class MainActivity : AppCompatActivity() {
     /** Tile texts show the current values; only the text changes, so the focus stays where it is. */
     private fun refreshTiles() {
         val cfg = Config.load(prefs)
-        val subtitleColor = Color.parseColor("#B5B5B5")
+        val subtitleColor = ContextCompat.getColor(this, R.color.text_secondary)
         for ((page, tile) in tileButtons) {
             val text = SpannableStringBuilder()
             text.append(page.title)
@@ -194,7 +194,7 @@ class MainActivity : AppCompatActivity() {
             status.startsWith("Läuft, aber") || status.startsWith("Warte") -> "#FFB020"
             status.startsWith("Läuft") -> "#3DDC84"
             status.startsWith("Pausiert") -> "#4DA3FF"
-            else -> "#6B6B72"
+            else -> "#80868B"
         },
     )
 
@@ -308,8 +308,8 @@ class MainActivity : AppCompatActivity() {
             Page("System", R.xml.pref_system) { c, _ ->
                 if (c.autoStart) "Start mit dem Fernseher: an" else "Start mit dem Fernseher: aus"
             },
-            Page("App-Update", R.xml.pref_update) { _, u ->
-                if (u != null) "Neu: Version ${u.versionName}" else "Updates direkt in der App installieren"
+            Page("App", R.xml.pref_app) { _, u ->
+                if (u != null) "Update ${u.versionName} verfügbar" else "Design, Updates, Version"
             },
         )
     }

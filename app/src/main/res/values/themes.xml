@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Ambilight" parent="Theme.AppCompat.NoActionBar">
-        <item name="colorPrimary">#FF8A00</item>
-        <item name="colorPrimaryDark">#121212</item>
-        <item name="colorAccent">#FF8A00</item>
-        <item name="android:windowBackground">#121212</item>
-        <item name="android:textColorPrimary">#F2F2F2</item>
-        <item name="android:textColorSecondary">#B5B5B5</item>
+    <style name="Theme.Ambilight" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSurface">@color/card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorOutline">@color/outline</item>
+        <item name="android:colorBackground">@color/bg</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:statusBarColor">@color/bg</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
     </style>
 </resources>

@@ -1,7 +1,7 @@
 package com.teest.ambilight
 
 import android.content.SharedPreferences
-import android.graphics.Color
+import androidx.core.content.ContextCompat
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
@@ -58,6 +58,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
             edit.setSingleLine()
             edit.setSelection(edit.text.length)
         }
+        findPreference<androidx.preference.ListPreference>("theme_mode")?.onPreferenceChangeListener =
+            Preference.OnPreferenceChangeListener { _, newValue ->
+                AppTheme.apply(newValue as String) // recreates the open screens in the new look
+                true
+            }
         findPreference<Preference>("update_version")?.let {
             val (name, code) = UpdateManager.installed(requireContext())
             it.summary = "$name (Build $code)"
@@ -128,8 +133,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Opaque background and no overscroll effect: some TV GPUs otherwise leave old frames on screen while scrolling.
-        view.setBackgroundColor(Color.parseColor("#121212"))
-        listView.setBackgroundColor(Color.parseColor("#121212"))
+        view.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.bg))
+        listView.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.bg))
         listView.overScrollMode = View.OVER_SCROLL_NEVER
     }
 

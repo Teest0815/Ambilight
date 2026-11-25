@@ -17,6 +17,7 @@
         android:required="false" />
 
     <application
+        android:name=".AmbilightApp"
         android:allowBackup="true"
         android:banner="@drawable/banner"
         android:icon="@drawable/ic_launcher"
