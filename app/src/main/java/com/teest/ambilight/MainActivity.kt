@@ -188,8 +188,7 @@ class MainActivity : AppCompatActivity() {
         )
         val kinds = arrayOf(TestKind.LAYOUT, TestKind.DIM, TestKind.JUMP, TestKind.WHEEL, TestKind.ALL)
         AlertDialog.Builder(this)
-            .setTitle("Test auf dem Bildschirm")
-            .setMessage("Das Testbild erscheint auf dem Fernseher und läuft durch die normale Bildschirmaufnahme. Beliebige Taste beendet den Test.")
+            .setTitle("Test auf dem Bildschirm (beliebige Taste beendet ihn)")
             .setItems(items) { _, which -> startTest(kinds[which]) }
             .setNegativeButton("Abbrechen", null)
             .show()
