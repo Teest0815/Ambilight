@@ -105,6 +105,7 @@ class CaptureService : Service() {
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
         config = Config.load(prefs)
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
+        if (prefs.getBoolean(RemoteActivity.PREF_AUTO, false)) RemoteServer.acquire(this, "service")
 
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_OFF)
@@ -715,6 +716,7 @@ class CaptureService : Service() {
     }
 
     override fun onDestroy() {
+        RemoteServer.release("service")
         prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
         if (receiverRegistered) {
             try {

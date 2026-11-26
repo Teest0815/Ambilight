@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        for (page in PAGES) PreferenceManager.setDefaultValues(this, page.xml, false)
+        for (page in PAGES) if (page.xml != 0) PreferenceManager.setDefaultValues(this, page.xml, false)
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
         setContentView(R.layout.activity_main)
         window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, R.color.bg)))
@@ -160,6 +160,10 @@ class MainActivity : AppCompatActivity() {
             val tile = layoutInflater.inflate(R.layout.item_tile, grid, false) as Button
             tileButtons.add(page to tile)
             tile.setOnClickListener {
+                if (page.xml == 0) {
+                    startActivity(Intent(this, RemoteActivity::class.java))
+                    return@setOnClickListener
+                }
                 startActivity(
                     Intent(this, SettingsActivity::class.java)
                         .putExtra(SettingsActivity.EXTRA_TITLE, page.title)
@@ -308,6 +312,7 @@ class MainActivity : AppCompatActivity() {
             Page("System", R.xml.pref_system) { c, _ ->
                 if (c.autoStart) "Start mit dem Fernseher: an" else "Start mit dem Fernseher: aus"
             },
+            Page("Fernbedienung", 0) { _, _ -> "Einstellungen per QR-Code vom Handy oder PC ändern" },
             Page("App", R.xml.pref_app) { _, u ->
                 if (u != null) "Update ${u.versionName} verfügbar" else "Design, Updates, Version"
             },

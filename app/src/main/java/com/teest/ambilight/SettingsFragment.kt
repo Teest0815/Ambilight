@@ -16,12 +16,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(requireArguments().getInt(ARG_XML), rootKey)
 
-        val numeric = listOf(
-            "leds_top", "leds_right", "leds_bottom", "leds_left",
-            "skip_leading", "total_leds",
-            "wled_preset", "wled_fx", "wled_sx", "wled_ix", "wled_pal",
-            "standby_wled_preset", "standby_wled_fx", "standby_wled_sx", "standby_wled_ix", "standby_wled_pal",
-        )
+        val numeric = SettingsSchema.NUMERIC_KEYS
         for (key in numeric) {
             findPreference<EditTextPreference>(key)?.setOnBindEditTextListener { edit ->
                 edit.inputType = InputType.TYPE_CLASS_NUMBER
@@ -97,36 +92,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
     /** Works for every settings page: preferences that do not exist on the current page are simply skipped. */
     private fun updateVisibility() {
         val p = preferenceManager.sharedPreferences ?: return
-        fun show(key: String, visible: Boolean) {
+        for ((key, visible) in SettingsVisibility.compute { p.all[it]?.toString() }) {
             findPreference<Preference>(key)?.isVisible = visible
-        }
-        fun number(key: String): Int = (p.all[key] as? String)?.trim()?.toIntOrNull() ?: 0
-
-        // Black screen
-        val black = p.getString("black_action", "off") ?: "off"
-        val blackColor = black == "static" || black == "effect"
-        val blackWled = black == "wled"
-        show("black_fade_ms", black != "hold")
-        show("black_color", blackColor)
-        show("black_brightness", blackColor)
-        show("black_effect", black == "effect")
-        show("effect_speed", black == "effect")
-        show("wled_preset", blackWled)
-        for (key in listOf("wled_fx", "wled_sx", "wled_ix", "wled_pal")) {
-            show(key, blackWled && number("wled_preset") == 0)
-        }
-
-        // Standby
-        val standby = p.getString("standby_action", "off") ?: "off"
-        val standbyColor = standby == "static" || standby == "effect"
-        val standbyWled = standby == "wled"
-        show("standby_color", standbyColor)
-        show("standby_brightness", standbyColor)
-        show("standby_effect", standby == "effect")
-        show("standby_effect_speed", standby == "effect")
-        show("standby_wled_preset", standbyWled)
-        for (key in listOf("standby_wled_fx", "standby_wled_sx", "standby_wled_ix", "standby_wled_pal")) {
-            show(key, standbyWled && number("standby_wled_preset") == 0)
         }
     }
 

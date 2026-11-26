@@ -59,3 +59,14 @@ allererste Installation dieser Version nötig.
   einzutragen unter App → GitHub-Token.
 - Android fragt in der Regel nach einer Bestätigung; ab Android 12 kann sie bei Updates entfallen.
 - Updates klappen nur, weil jede Version mit demselben Schlüssel signiert ist.
+
+## Fernbedienung (Einstellungen per Browser)
+
+Auf der Startseite die Kachel **Fernbedienung** öffnen: Die App startet einen kleinen Webserver und zeigt Adresse und
+QR-Code. Mit dem Handy scannen (oder die Adresse im Browser eingeben, Handy/PC im selben WLAN) und alle Einstellungen
+ändern, wie auf dem Fernseher. Änderungen gelten sofort.
+
+- Der Server läuft nur, solange der Fernbedienungs-Bildschirm offen ist. Optional auch, solange Ambilight läuft
+  (Schalter auf dem Bildschirm).
+- Jede Anfrage braucht den geheimen Schlüssel aus der Adresse. „Neuen Schlüssel erzeugen“ macht die alte Adresse ungültig.
+- Die Verbindung ist unverschlüsselt (HTTP) und gilt nur im lokalen Netz. Update-Token und -Repository sind nicht abrufbar.
