@@ -254,6 +254,8 @@ class CaptureService : Service() {
         var frameBlack = false
         var blackSince = 0L
         var inBlack = false
+        var ecoActive = false
+        var lastBlackFrameAt = 0L
         var handover = false
         var snapNext = true
         var lastStatus = 0L
@@ -426,8 +428,17 @@ class CaptureService : Service() {
                 }
                 // Black picture for a while (often copy-protected video such as Prime Video, which cannot be captured anyway):
                 // capture as small as possible so the TV has next to nothing to do beside playing the video.
-                val eco = inBlack && blackSince != 0L && loopStart - blackSince >= cfg.blackDelayMs + ECO_AFTER_MS &&
+                // Once on, it stays on until the picture has been free of black frames for a few seconds, otherwise
+                // single bright frames (subtitles, controls) would switch the full capture back on and the video stutters again.
+                if (ecoActive) {
+                    if (loopStart - lastBlackFrameAt >= ECO_RELEASE_MS || !prefs.getBoolean("black_eco", true)) ecoActive = false
+                } else if (inBlack && blackSince != 0L && loopStart - blackSince >= cfg.blackDelayMs + ECO_AFTER_MS &&
                     prefs.getBoolean("black_eco", true)
+                ) {
+                    ecoActive = true
+                    lastBlackFrameAt = loopStart
+                }
+                val eco = ecoActive
                 ensureReader(if (eco) ECO_WIDTH else effWidth)
 
                 // ---- grab the newest frame, if there is one ----
@@ -461,6 +472,7 @@ class CaptureService : Service() {
                     val mean = FrameAnalyzer.meanLuma(frame, fw, fh, fStride)
                     val thr = cfg.blackThreshold.toFloat()
                     frameBlack = if (inBlack) mean < thr * 1.6f + 1f else mean < thr
+                    if (frameBlack) lastBlackFrameAt = loopStart
 
                     if (cfg.barDetect) {
                         if (!frameBlack && loopStart - lastBarCheck >= 100) {
@@ -641,7 +653,11 @@ class CaptureService : Service() {
                 }
 
                 // An app effect needs its full frame rate, every other black behaviour is static.
-                val loopFps = if (eco && cfg.blackAction != BlackAction.EFFECT) ECO_FPS else effFps
+                val loopFps = when {
+                    !eco -> effFps
+                    inBlack -> if (cfg.blackAction == BlackAction.EFFECT) effFps else ECO_FPS
+                    else -> min(effFps, ECO_PICTURE_FPS)
+                }
                 delay(maxOf(1L, 1000L / loopFps - spent))
             }
         } finally {
@@ -758,6 +774,8 @@ class CaptureService : Service() {
         private const val ECO_AFTER_MS = 3000L
         private const val ECO_WIDTH = 32
         private const val ECO_FPS = 5
+        private const val ECO_PICTURE_FPS = 15
+        private const val ECO_RELEASE_MS = 6000L
         private const val MODE_AMBIENT = 0
         private const val MODE_BLACK = 1
         private const val MODE_STANDBY = 2
