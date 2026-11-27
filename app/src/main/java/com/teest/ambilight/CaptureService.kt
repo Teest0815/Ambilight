@@ -424,7 +424,11 @@ class CaptureService : Service() {
                     effFps = cfg.fps
                     effWidth = cfg.captureWidth
                 }
-                ensureReader(effWidth)
+                // Black picture for a while (often copy-protected video such as Prime Video, which cannot be captured anyway):
+                // capture as small as possible so the TV has next to nothing to do beside playing the video.
+                val eco = inBlack && blackSince != 0L && loopStart - blackSince >= cfg.blackDelayMs + ECO_AFTER_MS &&
+                    prefs.getBoolean("black_eco", true)
+                ensureReader(if (eco) ECO_WIDTH else effWidth)
 
                 // ---- grab the newest frame, if there is one ----
                 var newFrame = false
@@ -636,7 +640,9 @@ class CaptureService : Service() {
                     }
                 }
 
-                delay(maxOf(1L, 1000L / effFps - spent))
+                // An app effect needs its full frame rate, every other black behaviour is static.
+                val loopFps = if (eco && cfg.blackAction != BlackAction.EFFECT) ECO_FPS else effFps
+                delay(maxOf(1L, 1000L / loopFps - spent))
             }
         } finally {
             // Leave the strip dark (unless WLED is showing its own effect right now).
@@ -749,6 +755,9 @@ class CaptureService : Service() {
         const val EXTRA_DATA = "data"
         private const val NOTIF_ID = 1
         private const val MIN_ADAPTIVE_FPS = 12
+        private const val ECO_AFTER_MS = 3000L
+        private const val ECO_WIDTH = 32
+        private const val ECO_FPS = 5
         private const val MODE_AMBIENT = 0
         private const val MODE_BLACK = 1
         private const val MODE_STANDBY = 2

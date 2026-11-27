@@ -94,4 +94,10 @@
         android:title="WLED: Palette"
         app:useSimpleSummaryProvider="true" />
 
+    <SwitchPreferenceCompat
+        android:defaultValue="true"
+        android:key="black_eco"
+        android:summary="Bleibt das Bild länger schwarz (z. B. bei Amazon Prime, das geschütztes Video nicht freigibt), nimmt die App nur noch winzig und selten auf. Das entlastet den Fernseher, das Video ruckelt weniger."
+        android:title="Sparmodus bei schwarzem Bild" />
+
 </PreferenceScreen>
